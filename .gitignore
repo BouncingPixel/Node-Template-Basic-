@@ -27,7 +27,6 @@ web.config
 # Logs and databases #
 ######################
 *.log
-*.sql
 *.sqlite
 
 # OS generated files #
@@ -49,3 +48,5 @@ vendor
 # OpenShift Project file #
 ##########################
 .ocproject
+
+config/local.json

@@ -11,6 +11,8 @@
 │ │ ├── css/
 │ │ ├── images/
 │ │ └── js/
+│ ├── config/
+│ │ └── local.json
 │ ├── controllers/
 │ ├── middleware/
 │ ├── responses/
@@ -39,6 +41,13 @@ JavaScript. The resulting output of `webpack` would be in `/server/assets/js/`.
 This directory stores the public served static assets such as css, images, and JS. If using webpack,
 the resulting output from webpack would live in the `/server/assets/js/` directory. The source of the JS
 would be in `/client/`.
+
+### /server/config/local.json
+
+A gitignored file that may be created to store local specific settings. Default configuration is placed in server.js.
+- For Heroku, these settings are set via the environment variables.
+- For Openshift/Devserver, these settings are set via the environment variables.
+- For development, use the local.json.
 
 ### /server/controllers/
 
@@ -119,13 +128,8 @@ code is more performant, updated more often, and is in use by more projects.
 ### dustjs
 
 The LinkedIn fork of DustJS is our default template system. In order to simplify rendering of templates,
-`adaro` from Paypal is used to handle the caching, rendering, and `express` bindings. `adaro` also includes
-all of the `dustjs-helpers` within the installation. For client side requirements, please use the same version
-of dustjs on the client side as `adaro` uses.
-
-Alternatively, `dustjs-linkedin` may be used with `consolidate`. `consolidate` will handle the `express`
-bindings and caching. `dustjs-linkedin` is a universal package which can be used server and client side.
-Many existing projects use this alternative before `adaro` and this is still acceptable.
+`consolidate` is used to handle the caching, rendering, and `express` bindings. For client side requirements,
+please use the same version of dustjs on the client side.
 
 ### winston
 
