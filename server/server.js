@@ -41,7 +41,7 @@ async.auto({
     });
   },
 
-  loadServer: ['connectToDB', 'connectToOtherDb', function(cb, results) {
+  loadServer: ['connectToDB', function(cb, results) {
     // now anything that may include a model may be used
     winston.debug('Loading express server');
 
@@ -125,9 +125,9 @@ async.auto({
     passport.serializeUser(PassportController.serializeUser);
     passport.deserializeUser(PassportController.deserializeUser);
 
-    app.use('login', PassportController.loginStrategy);
-    app.use('passwordless', PassportController.passwordlessStrategy);
-    app.use('remember-me', PassportController.rememberMeStrategy);
+    passport.use('login', PassportController.loginStrategy);
+    passport.use('passwordless', PassportController.passwordlessStrategy);
+    passport.use('remember-me', PassportController.rememberMeStrategy);
     app.use(passport.authenticate('remember-me'));
 
     // optional, but sometimes handy!
