@@ -7,8 +7,6 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var RememberMeStrategy = require('passport-remember-me').Strategy;
 
-bluebird.promisifyAll(bcrypt);
-
 var User = require('../models/User');
 var RememberToken = require('../models/RememberToken');
 var LoginLocker = require('../models/LoginLocker');
@@ -25,7 +23,7 @@ else:
   on fail, add 1 to failed counter. if it became > threshold, then set lockedUntil = MIN(maxLockTime, ((failCounter - 3) ** 2) * 5)
 */
 
-function generalLogin(user, done) {
+function generalLogin(req, user, done) {
   if (!user) {
     var invalidError = new Error('Invalid username or password');
     invalidError.status = 401;
@@ -38,7 +36,16 @@ function generalLogin(user, done) {
     return done(bannedError);
   }
 
-  req.logIn(user, done);
+  req.session.regenerate(function() {
+    req.logIn(user, function(err) {
+      if (err) { return done(err); }
+
+      // if there's anything specific about the session that needs to be stored
+      req.session.startAt = new Date().getTime();
+      done();
+      return;
+    });
+  });
 }
 
 var PassportController = {
@@ -56,71 +63,70 @@ var PassportController = {
   },
 
   loginStrategy: new LocalStrategy({
-      usernameField: 'email',
-      passwordField: 'password',
-      passReqToCallback: true
-    },
-    function(req, email, password, done) {
-      var lowerEmail = email.toLowerCase();
+    usernameField: 'email',
+    passwordField: 'password',
+    passReqToCallback: true
+  },
+  function(req, email, password, done) {
+    var lowerEmail = email.toLowerCase();
 
-      var userPromise = User.findOne({
-        email: lowerEmail,
-        role: {$ne: 'noaccess'},
-        deactivatedat: null
-      });
+    var userPromise = User.findOne({
+      email: lowerEmail,
+      role: {$ne: 'noaccess'},
+      deactivatedat: null
+    });
 
-      var lockerPromise = LoginLocker.findOne({email: lowerEmail});
+    var lockerPromise = LoginLocker.findOne({email: lowerEmail});
 
-      bluebird.all([
-        userPromise,
-        lockerPromise
-      ]).spread(function(user, lockInfo) {
-        if (lockInfo && lockInfo.lockedUntil && new Date() <= lockInfo.lockedUntil) {
-          // do absolutely nothing if locked
-          return done(null, false);
-        }
+    bluebird.all([
+      userPromise,
+      lockerPromise
+    ]).spread(function(user, lockInfo) {
+      if (lockInfo && lockInfo.lockedUntil && new Date() <= lockInfo.lockedUntil) {
+        // do absolutely nothing if locked
+        return done(null, false);
+      }
 
-        // TODO: add audit log
+      // TODO: add audit log
 
-        var checkPassword = user ? user.password : 'THISISNOTVALIDPASSWORD';
-        return bcrypt.compareAsync(password, checkPassword);
-      })
-      .then(function(isValid) {
-        if (isValid) {
-          ret = user;
-          if (lockInfo) {
-            lockInfo.failedCount = 0;
-            return lockInfo.save().then(function() {
-              return user;
-            });
-          } else {
-            return user;
-          }
-        } else {
-          if (!lockInfo) {
-            lockInfo = new LoginLocker();
-          }
-          // TODO: can we make this atomic?
-          lockInfo.failedCount += 1;
-
-          var maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
-          var maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
-          if (lockInfo.failedCount > maxFailTries) {
-            lockInfo.lockedUntil = Math.min(
-              maxLockTime,
-              Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
-            );
-          }
-
+      var checkPassword = user ? user.password : 'THISISNOTVALIDPASSWORD';
+      return bcrypt.compare(password, checkPassword);
+    }).then(function(isValid) {
+      if (isValid) {
+        ret = user;
+        if (lockInfo) {
+          lockInfo.failedCount = 0;
           return lockInfo.save().then(function() {
-            return false;
+            return user;
           });
+        } else {
+          return user;
         }
-      })
-      .then(function(ret) {
-        done(null, ret);
-      })
-      .catch(done);
+      } else {
+        if (!lockInfo) {
+          lockInfo = new LoginLocker();
+        }
+        // TODO: can we make this atomic?
+        lockInfo.failedCount += 1;
+
+        var maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
+        var maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
+        if (lockInfo.failedCount > maxFailTries) {
+          lockInfo.lockedUntil = Math.min(
+            maxLockTime,
+            Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
+          );
+        }
+
+        return lockInfo.save().then(function() {
+          // weird, but we need to return a boolean if they successfully logged in
+          // not the user itself
+          return false;
+        });
+      }
+    }).then(function(ret) {
+      done(null, ret);
+    }).catch(done);
   }),
 
   passwordlessStrategy: new LocalStrategy({
@@ -129,33 +135,44 @@ var PassportController = {
     passReqToCallback: true
   },
   function(req, email, token, done) {
-    User
-      .findOne({email: email.toLowerCase(), tokenexpire: {$gte: new Date()}})
-      .then(function(user) {
-        if (!user) {
-          done(null, false);
-          return;
-        }
+    var lowerEmail = email.toLowerCase();
 
-        return bcrypt
-          .compareAsync(token, user.logintoken)
-          .then(function(res) {
-            if (!res) {
-              done(null, false);
-              return;
-            }
+    var userPromise = User.findOne({
+      email: lowerEmail,
+      role: {$ne: 'noaccess'},
+      deactivatedat: null,
+      tokenexpire: {$gte: new Date()}
+    });
 
-            user.logintoken = null;
-            user.tokenexpire = null;
-            return user.save();
-          })
-          .then(function(user) {
-            return done(null, user);
-          });
-      })
-      .catch(function(err) {
-        done(err);
+    var lockerPromise = LoginLocker.findOne({email: lowerEmail});
+
+    bluebird.all([
+      userPromise,
+      lockerPromise
+    ]).spread(function(user, lockInfo) {
+      if (lockInfo && lockInfo.lockedUntil && new Date() <= lockInfo.lockedUntil) {
+        // do absolutely nothing if locked
+        return done(null, false);
+      }
+
+      var checkToken = user ? user.logintoken : 'THISISNOTVALIDPASSWORD';
+      return bcrypt.compare(token, checkToken);
+    }).then(function(isValid) {
+      // we don't mess with the lock out with tokens, but we could
+      if (!isValid) {
+        return false;
+      }
+
+      user.logintoken = null;
+      user.tokenexpire = null;
+      return user.save().then(function() {
+        // weird, but we need to return a boolean if they successfully logged in
+        // not the user itself
+        return true;
       });
+    }).then(function(ret) {
+      done(null, ret);
+    }).catch(done);
   }),
 
   rememberMeStrategy: new RememberMeStrategy(function(token, done) {
@@ -173,8 +190,13 @@ var PassportController = {
     });
   }),
 
-  generateRememberMe: function(req, res, next) {
+  // only issues remember-me token if the POST body variable rememberme is "true" (string or boolean)
+  issueRememberMe: function(req, res, next) {
     if (!req.user) {
+      return next();
+    }
+
+    if (req.method.toLowerCase() !== 'post' || !(req.body.rememberme === true || req.body.rememberme === 'true')) {
       return next();
     }
 
@@ -199,7 +221,7 @@ var PassportController = {
         return next(err);
       }
 
-      generalLogin(user, next);
+      generalLogin(req, user, next);
     });
   },
 
@@ -209,7 +231,7 @@ var PassportController = {
         return next(err);
       }
 
-      generalLogin(user, next);
+      generalLogin(req, user, next);
     });
   },
 
