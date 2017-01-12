@@ -1,5 +1,9 @@
 'use strict';
 
+if (process.env.NEW_RELIC_APP_NAME && process.env.NEW_RELIC_LICENSE_KEY) {
+  require('newrelic');
+}
+
 /*
  * app.js - bootstrap
  * This connects to any databases and fires up the express server
@@ -9,12 +13,13 @@
 process.chdir(__dirname);
 
 if (process.env.DEV_MODE === 'true') {
-  process.env.NODE_ENV = 'production';
+  process.env.NODE_ENV = 'development';
 }
 
 const nconf = require('nconf');
 nconf.argv()
   .env()
+  .file({ file: 'config/config.json' })
   .file({ file: 'config/local.json' })
   .defaults({
     port: 3000,
@@ -42,8 +47,7 @@ Promise
   .then(() => {
     // load up mongoose. may even need to load other things
     winston.debug('Connect to mongoose database');
-    // return mongoose.connect(nconf.get('dbURL'), {autoindex: process.env.NODE_ENV !== 'production'});
-    return Promise.resolve();
+    return mongoose.connect(nconf.get('mongoConnectStr'), {autoindex: process.env.NODE_ENV !== 'production'});
   })
   .then(() => {
     // load up the server

@@ -1,0 +1,3 @@
+lease click the following link within 24 hours to log into your account.<br>
+Once logged in, you may change your password:<br>
+<a href="{emailurl}/token/?email={email}&token={token}">Log in</a>

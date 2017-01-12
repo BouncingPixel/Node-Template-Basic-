@@ -1,4 +1,4 @@
 
 // Controllers
 
-exports.PassportController = require('./PassportController');
+exports.AuthController = require('./AuthController');

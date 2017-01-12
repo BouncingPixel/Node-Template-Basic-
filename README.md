@@ -1,5 +1,14 @@
 # NodeJS Template Basic
 
+## Table of Contents:
+
+- [Directory Structure](#directory-structure)
+- [Default Packages](#default-packages)
+- [Other packages for tasks](#other-packages-for-tasks)
+- [Configuration](#configuration)
+- [Working With the Template](#working-with-the-template)
+- [Other notes](#other-notes)
+
 ## Directory Structure
 
 ```
@@ -143,16 +152,79 @@ to send console logs automatically to the external service.
 * `async`: highly recommended for async code, though Promises+Bluebird may be used without `async`.
 * `bluebird`: if using Promises, Bluebird is a top promise implementation. Better than the native Promises.
 * `lodash`: useful utility library for data manipulation
-* `lusca`: useful security tool for CSRF protection and others. Mostly we just use the CSRF part.
+* `csurf`: useful security tool for CSRF protection and others. Mostly we just use the CSRF part.
 * `moment`: date and timezone handling library
 * `mongoose`: Mongo ORM
 * `multer`: file upload processing for `express`
+* `newrelic`: the newrelic agent for monitoring production code
 * `passport`: authentication helpers for `express` along with `passport-local`, `passport-remember-me`,
   `passport-facebook`, and many more.
 * `pkgcloud`: utility for managing files in Rackspace Cloud Files
 * `pluralize`: utility to aid in pluralizing words and phrases
 * `validator`: utility with standard validators for many common situations such as isEmail, isZip, and more
 * `webpack`: client-side build tool to enable CommonJS syntax, concat, and minification of source
+
+## Configuration
+
+The template uses `nconf` for configuration. Configuration settings may be set in the following ways:
+- ENV variables
+  Generally, ENV variables are used with Heroku and Openshift to define values that otherwise
+  would be defined in the config/local.json file.
+
+- config/local.json
+  This file should NEVER be included into the git repo. This may include API keys, passwords, and other
+  sensitive material that should stay out of repos. Legacy private projects may contain such material,
+  but all projects moving forward should follow this best practice.
+
+- config/config.json
+  This can be in the git repo and defines a set of non-sensitive configuration settings that all users
+  will share. For example, the `maxFailTries` and `maxLockTime` fit in this category. This file is
+  not required as these settings can be defined in the defaults section in the code instead.
+
+The configuration settings are loaded from ENV first, then local.json, and last config.json.
+No settings are overridden, so a value in ENV takes higher priority over any JSON files and the
+settings in local.json take higher priority over config.json. Thus, if you need to run your instance
+with special values separate from the project, you may define them in your local.json config file
+and not disrupt the project-wide config.json.
+
+### Configuration keys
+
+- `mongoConnectStr`
+  The full connection string to the mongo database including the host, port, replicaset, username, password, and database name.
+- `mailgunDomain`
+  The domain used in the mailgun configuration. If left unset, sending emails will simply return without sending and without errors.
+- `mailgunApiKey`
+  The API key for accessing mailgun. If left unset, sending emails will simply return without sending and without errors.
+- `siteDomain`
+  The domain of the site, used in emails sent out, but can be used in other places with redirects.
+- `logLevel`
+  The log level to output and store. Defaults to `debug`.
+- `port`
+  The port to run on. Defaults to `3000`. Heroku and Openshift will have this set for you.
+- `maxFailTries`
+  The maximum number of failed login attempts before locking an account. Defaults to `3`.
+- `maxLockTime`
+  The maximum length of time an account may be locked out. Defaults to `1 hour`.
+- `requireSSL`
+  Set to true if the site should require HTTPS. Defaults to `false`.
+- `sessionSecret`
+  The secret to use to sign the session cookie.
+- `redirectOn401`
+  The page to redirect to when a 401 (not authenticated) occurs and the request was not JSON. Defaults to `/login`.
+
+Heroku/Production (ENV variable) Only:
+- `NEW_RELIC_APP_NAME`
+- `NEW_RELIC_LICENSE_KEY`
+
+These should not be set on the developer machine, only production.
+Developer machines may see the error:
+```
+New Relic for Node.js halted startup due to an error:
+Error: Not starting without license key!
+```
+This is expected as only the production code should contain the license key.
+
+## Working With the Template
 
 ## Other notes
 

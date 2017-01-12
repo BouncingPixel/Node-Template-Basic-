@@ -1,0 +1,2 @@
+<p>From {name} &lt; {email} &gt; :</p>
+<p>{message}</p>

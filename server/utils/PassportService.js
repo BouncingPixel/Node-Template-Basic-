@@ -221,6 +221,7 @@ var PassportController = {
         return next(err);
       }
 
+      // passport's default behavior is not to prevent session fixation, so we do it ourselves
       generalLogin(req, user, next);
     });
   },
