@@ -210,7 +210,7 @@ const PassportController = {
       }
 
       let cookieInfo = {path: '/', httpOnly: true, maxAge: 2 * 7 * 24 * 3600 * 1000};
-      if (nconf.get('requireSSL') === true || nconf.get('requireSSL') === 'true') {
+      if (nconf.get('requireHTTPS') === true || nconf.get('requireHTTPS') === 'true') {
         cookieInfo.secure = true;
       }
 

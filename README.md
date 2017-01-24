@@ -259,7 +259,7 @@ and not disrupt the project-wide config.json.
   The maximum number of failed login attempts before locking an account. Defaults to `3`.
 - `maxLockTime`
   The maximum length of time an account may be locked out. Defaults to `1 hour`.
-- `requireSSL`
+- `requireHTTPS`
   Set to true if the site should require HTTPS. Defaults to `false`.
 - `sessionSecret`
   The secret to use to sign the session cookie.

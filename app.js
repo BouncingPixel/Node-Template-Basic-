@@ -23,7 +23,7 @@ nconf.argv()
   .file({ file: 'config/local.json' })
   .defaults({
     port: 3000,
-    requireSSL: false,
+    requireHTTPS: false,
     logLevel: 'debug',
     redirectOn401: '/login',
 
@@ -46,7 +46,7 @@ Promise
   .resolve(true)
   .then(() => {
     // load up mongoose. may even need to load other things
-    winston.debug('Connect to mongoose database');
+    winston.debug('Connect to mongoose database ' + nconf.get('mongoConnectStr'));
     return mongoose.connect(nconf.get('mongoConnectStr'), {autoindex: process.env.NODE_ENV !== 'production'});
   })
   .then(() => {

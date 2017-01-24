@@ -21,7 +21,7 @@ const express = require('express');
 const app = express.Router;
 const PassportService = require('./services/passport-service');
 
-if (nconf.get('requireSSL') === true || nconf.get('requireSSL') === 'true') {
+if (nconf.get('requireHTTPS') === true || nconf.get('requireHTTPS') === 'true') {
   app.use(function(req, res, next) {
     if (req.headers['x-forwarded-proto'] !== 'https') {
       return res.redirect(['https://', req.get('Host'), req.url].join(''));
