@@ -1,4 +1,4 @@
-const makeGenericError = require('./makeGenericError');
+const makeGenericError = require('./make-generic-error');
 
 global.ServerErrors = {
   BadRequest: makeGenericError(400, 'Your request did not contain the necessary information', 'errors/400'),

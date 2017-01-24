@@ -1,6 +1,6 @@
 {
   "logLevel": "debug",
-  "mongoConnectStr": "mongo://localhost:20716/local",
+  "mongoConnectStr": "mongodb://localhost:27017/local",
   "port": "3000",
   "requireHTTPS": false,
   "sessionSecret": "keyboardcathere"

@@ -18,7 +18,7 @@ const expressWinston = require('express-winston');
 winston.debug('Loading express server');
 
 const express = require('express');
-const app = express.Router;
+const app = express.Router();
 const PassportService = require('./services/passport-service');
 
 if (nconf.get('requireHTTPS') === true || nconf.get('requireHTTPS') === 'true') {
