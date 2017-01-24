@@ -10,10 +10,9 @@ const dust = require('dustjs-linkedin');
 const emailTemplatesPath = '../emails/';
 
 const domain = nconf.get('mailgunDomain');
-const mailgun =
-  (domain && nconf.get('mailgunApiKey'))
-    ? require('mailgun-js')({apiKey: nconf.get('mailgunApiKey'), domain: domain})
-    : null;
+const mailgun = (domain && nconf.get('mailgunApiKey')) ?
+    require('mailgun-js')({apiKey: nconf.get('mailgunApiKey'), domain: domain}) :
+    null;
 
 function formatEmailAddress(person) {
   if (typeof person === 'string') {
