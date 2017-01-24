@@ -4,21 +4,26 @@ const logger = require('winston');
 
 const captchaVerifyUrl = 'https://www.google.com/recaptcha/api/siteverify';
 
-module.exports = function isValidCaptcha(captchaResponse) {
+module.exports = function requireNocaptcha(req, res, next) {
   if (!nconf.get('nocaptchaSecret') || nconf.get('nocaptchaBypass')) {
-    return Promise.resolve(true);
+    return next();
   }
 
+  const captchaResponse = req.body['g-recaptcha-response'];
   const postVars = 'secret=' + nconf.get('nocaptchaSecret') + '&response=' + captchaResponse;
 
-  return axios.post(captchaVerifyUrl, postVars, {
+  axios.post(captchaVerifyUrl, postVars, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   }).then(function(response) {
-    return response.data.success;
+    if (response.data.success) {
+      return next();
+    } else {
+      return next(ServerErrors.BadRequest('Unable to validate captcha'));
+    }
   }).catch(function(response) {
     logger.warn(response);
-    return false;
+    return next(ServerErrors.ServerError('A server error has occurred'));
   });
 };
