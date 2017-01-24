@@ -1,0 +1,29 @@
+'use strict';
+
+const mongoose = require('mongoose');
+
+const LoginLockerSchema = mongoose.Schema({
+  email: {
+    type: String,
+    unique: true,
+    required: true
+  },
+
+  failedCount: {
+    type: Number,
+    default: 0
+  },
+
+  lockedUntil: {
+    type: Date
+  }
+}, {
+  toObject: {
+    virtuals: true
+  },
+  toJSON: {
+    virtuals: true
+  }
+});
+
+module.exports = mongoose.model('loginlocker', LoginLockerSchema);

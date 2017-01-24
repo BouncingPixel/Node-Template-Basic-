@@ -1,29 +1,66 @@
 # NodeJS Template Basic
 
+## Table of Contents:
+
+- [Working With the Template](#working-with-the-template)
+- [Directory Structure](#directory-structure)
+- [Default Packages](#default-packages)
+- [Other packages for tasks](#other-packages-for-tasks)
+- [Configuration](#configuration)
+- [Other notes](#other-notes)
+
+## Working With the Template
+
+### System Requirements
+
+- NodeJS 6 LTS
+- MongoDB
+
+### Features
+
+### Adding routes
+
+### Returning errors
+
+### Customization examples
+
+#### No users required, client-facing only
+
+#### Users required, admin-facing only
+
 ## Directory Structure
 
 ```
 / (project root)
 ├── client/ (if using webpack or similar client-side build tool)
+├── config/
+│ ├── config.json
+│ └── local.json
 ├── mockups/
+├── public/
+│ ├── css/
+│ ├── images/
+│ └── js/
 ├─┬ server/
-│ ├─┬ assets/
-│ │ ├── css/
-│ │ ├── images/
-│ │ └── js/
-│ ├── config/
-│ │ └── local.json
 │ ├── controllers/
+│ ├── emails/
+│ ├── errors/
 │ ├── middleware/
+│ ├── models/
 │ ├── responses/
-│ ├── utils/
+│ ├── routes/
+│ ├── services/
+│ ├─┬ utils/
+│ │ └── schemas/
 │ ├── views/
-│ ├── routes.js
-│ └── server.js
+│ └── index.js
 ├── working/
 ├── .gitignore
 ├── .slugignore
 ├── .s2iignore
+├── app.js
+├── express-server.js
+├── newrelic.js
 └── package.json
 ```
 
@@ -36,23 +73,39 @@ These directories are used to house any PSDs and other assets in progress.
 If using a client-side build tool such as `webpack`, use the `/client/` directory to store all the client-side
 JavaScript. The resulting output of `webpack` would be in `/server/assets/js/`.
 
-### /server/assets/
+### /public/
 
 This directory stores the public served static assets such as css, images, and JS. If using webpack,
-the resulting output from webpack would live in the `/server/assets/js/` directory. The source of the JS
+the resulting output from webpack would live in the `/public/js/` directory. The source of the JS
 would be in `/client/`.
 
-### /server/config/local.json
+### /config/
 
-A gitignored file that may be created to store local specific settings. Default configuration is placed in server.js.
-- For Heroku, these settings are set via the environment variables.
-- For Openshift/Devserver, these settings are set via the environment variables.
-- For development, use the local.json.
+See the section [Configuration](#configuration).
 
 ### /server/controllers/
 
 Controllers handle much of the logic of the application and also contain the Route handlers.
 Generally, split the Controllers by purpose or data types.
+
+### /server/emails/
+
+The email folder is used to store the configuration and dust template files for each email that could be sent.
+An email type must contain both files: a JS file which exports an object containing the configuration for that email,
+and a dust file defining the template to be displayed to the end user. For mass-sent emails that need individual variables,
+Mailgun supports per-recipient variables. Expose the variable in the configuration using `individualVars`, and then
+use the format `%recipient.VARIABLE%` where `VARIABLE` is the name of the variable exposed. All variables shared between
+all recipients can skip the Mailgun template variables and use Dust directly. These variables are exposed with `mergeVars`.
+
+Each email can define who the from address is. This can either be a function which returns the from address or a string.
+Each email can define who the to addresses are. This field is an array and can either contain a string of each email or
+an object such as `{name: "Person's name", email: "email@address.domain"}`.
+Finally, the email configuration must define a subject, which may be a function or a string.
+
+Each of the functions defined for `from`, `subject`, `individualVars`, and `mergeVars` take only one parameter
+which contains all options passed into the call to `sendTemplateEmail`.
+
+Sending an email uses `utils/emailService.js` and the function `sendTemplateEmail`.
 
 ### /server/middleware/
 
@@ -60,15 +113,25 @@ Middleware defines logic to run before a route handler, such as verifying a user
 extra information prior to handling a route. The extra information could be shared among multiple routes
 and makes it simpler to pull in one place instead of remembering to include in each route.
 
+### /server/models/
+
 ### /server/responses/
 
 Responses are utilities that handle differences between XHR and standard HTTP requests. They also make it
 easier to display error pages.
 
+### /server/routes/
+
+### /server/services/
+
 ### /server/utils/
 
 Utils is used for utilities shared between various controllers and/or other subsystems. This could include
 handy functions, data fetchers, external API handlers, and more.
+
+#### /server/utils/co-wrap-route.js
+#### /server/utils/render-static-page.js
+
 
 ### /server/views/
 
@@ -143,16 +206,84 @@ to send console logs automatically to the external service.
 * `async`: highly recommended for async code, though Promises+Bluebird may be used without `async`.
 * `bluebird`: if using Promises, Bluebird is a top promise implementation. Better than the native Promises.
 * `lodash`: useful utility library for data manipulation
-* `lusca`: useful security tool for CSRF protection and others. Mostly we just use the CSRF part.
+* `csurf`: useful security tool for CSRF protection and others. Mostly we just use the CSRF part.
 * `moment`: date and timezone handling library
 * `mongoose`: Mongo ORM
 * `multer`: file upload processing for `express`
+* `newrelic`: the newrelic agent for monitoring production code
 * `passport`: authentication helpers for `express` along with `passport-local`, `passport-remember-me`,
   `passport-facebook`, and many more.
 * `pkgcloud`: utility for managing files in Rackspace Cloud Files
 * `pluralize`: utility to aid in pluralizing words and phrases
 * `validator`: utility with standard validators for many common situations such as isEmail, isZip, and more
 * `webpack`: client-side build tool to enable CommonJS syntax, concat, and minification of source
+
+## Configuration
+
+The template uses `nconf` for configuration. Configuration settings may be set in the following ways:
+- ENV variables
+  Generally, ENV variables are used with Heroku and Openshift to define values that otherwise
+  would be defined in the config/local.json file.
+
+- config/local.json
+  This file should NEVER be included into the git repo. This may include API keys, passwords, and other
+  sensitive material that should stay out of repos. Legacy private projects may contain such material,
+  but all projects moving forward should follow this best practice.
+
+- config/config.json
+  This can be in the git repo and defines a set of non-sensitive configuration settings that all users
+  will share. For example, the `maxFailTries` and `maxLockTime` fit in this category. This file is
+  not required as these settings can be defined in the defaults section in the code instead.
+
+The configuration settings are loaded from ENV first, then local.json, and last config.json.
+No settings are overridden, so a value in ENV takes higher priority over any JSON files and the
+settings in local.json take higher priority over config.json. Thus, if you need to run your instance
+with special values separate from the project, you may define them in your local.json config file
+and not disrupt the project-wide config.json.
+
+### Configuration keys
+
+- `mongoConnectStr`
+  The full connection string to the mongo database including the host, port, replicaset, username, password, and database name.
+- `mailgunDomain`
+  The domain used in the mailgun configuration. If left unset, sending emails will simply return without sending and without errors.
+- `mailgunApiKey`
+  The API key for accessing mailgun. If left unset, sending emails will simply return without sending and without errors.
+- `siteDomain`
+  The domain of the site, used in emails sent out, but can be used in other places with redirects.
+- `logLevel`
+  The log level to output and store. Defaults to `debug`.
+- `port`
+  The port to run on. Defaults to `3000`. Heroku and Openshift will have this set for you.
+- `maxFailTries`
+  The maximum number of failed login attempts before locking an account. Defaults to `3`.
+- `maxLockTime`
+  The maximum length of time an account may be locked out. Defaults to `1 hour`.
+- `requireHTTPS`
+  Set to true if the site should require HTTPS. Defaults to `false`.
+- `sessionSecret`
+  The secret to use to sign the session cookie.
+- `redirectOn401`
+  The page to redirect to when a 401 (not authenticated) occurs and the request was not JSON. Defaults to `/login`.
+
+Optional:
+- noCaptcha:
+  - `nocaptchaSecret`
+    The secret, or API key, to use with nocaptcha validation. If not set, the captcha will be bypassed (always pass).
+  - `nocaptchaBypass`
+    True or false (boolean) to bypass the captcha. Useful for local environments without the need for captcha during testing.
+
+Heroku/Production (ENV variable) Only:
+- `NEW_RELIC_APP_NAME`
+- `NEW_RELIC_LICENSE_KEY`
+
+These should not be set on the developer machine, only production.
+Developer machines may see the error:
+```
+New Relic for Node.js halted startup due to an error:
+Error: Not starting without license key!
+```
+This is expected as only the production code should contain the license key.
 
 ## Other notes
 

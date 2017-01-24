@@ -1,14 +1,8 @@
 'use strict';
 
 var responses = {
-  badRequest: require('./badRequest'),
-  forbidden: require('./forbidden'),
-  banned: require('./banned'),
-  negotiate: require('./negotiate'),
-  notFound: require('./notFound'),
   ok: require('./ok'),
-  okRedirect: require('./okRedirect'),
-  serverError: require('./serverError')
+  okRedirect: require('./ok-redirect')
 };
 
 module.exports = function(req, res, next) {

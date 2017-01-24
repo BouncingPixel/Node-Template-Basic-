@@ -1,7 +1,5 @@
 'use strict';
 
-var logger = require('winston');
-
 /**
  *
  * > Log Level: *info*
@@ -20,8 +18,6 @@ module.exports = function sendOK(data, options) {
 
   var req = this.req;
   var res = this.res;
-
-  logger.silly('res.ok() :: Sending 200 ("OK") response');
 
   // Set status code
   res.status(200);
