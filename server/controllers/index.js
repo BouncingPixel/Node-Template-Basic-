@@ -1,4 +1,4 @@
 
 // Controllers
 
-exports.AuthController = require('./AuthController');
+exports.AuthController = require('./auth-controller');

@@ -1,9 +1,8 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var Types = mongoose.Schema.Types;
+const mongoose = require('mongoose');
 
-var LoginLockerSchema = mongoose.Schema({
+const LoginLockerSchema = mongoose.Schema({
   email: {
     type: String,
     unique: true,

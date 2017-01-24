@@ -1,11 +1,12 @@
 'use strict';
 
-require('./errors/')
+require('./errors/');
 const nconf = require('nconf');
 
-const bluebird = require('bluebird');
 const winston = require('winston');
 const csrf = require('csurf');
+const mongoose = require('mongoose');
+const passport = require('passport');
 const session = require('express-session');
 const MongoStore = require('connect-mongo')(session);
 const flash = require('connect-flash');
@@ -18,7 +19,7 @@ winston.debug('Loading express server');
 
 const express = require('express');
 const app = express.Router;
-const PassportController = require('./controllers/PassportController');
+const PassportService = require('./services/passport-service');
 
 if (nconf.get('requireSSL') === true || nconf.get('requireSSL') === 'true') {
   app.use(function(req, res, next) {
@@ -61,12 +62,12 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
-passport.serializeUser(PassportController.serializeUser);
-passport.deserializeUser(PassportController.deserializeUser);
+passport.serializeUser(PassportService.serializeUser);
+passport.deserializeUser(PassportService.deserializeUser);
 
-passport.use('login', PassportController.loginStrategy);
-passport.use('passwordless', PassportController.passwordlessStrategy);
-passport.use('remember-me', PassportController.rememberMeStrategy);
+passport.use('login', PassportService.loginStrategy);
+passport.use('passwordless', PassportService.passwordlessStrategy);
+passport.use('remember-me', PassportService.rememberMeStrategy);
 app.use(passport.authenticate('remember-me'));
 
 // optional, but sometimes handy!
@@ -93,8 +94,8 @@ app.use(function(req, res, next) {
     return next();
   }
 
-  var metaLog = process.env.NODE_ENV === 'production';
-  var expressLog = process.env.NODE_ENV !== 'production';
+  const metaLog = process.env.NODE_ENV === 'production';
+  const expressLog = process.env.NODE_ENV !== 'production';
 
   return expressWinston.logger({
     winstonInstance: winston,
@@ -126,7 +127,7 @@ app.use(function(req, res, next) {
 // load our routes file in
 winston.silly('Loading app routes');
 const routes = require('./routes');
-for (var r in routes) {
+for (let r in routes) {
   app.use(r, routes[r]);
 }
 
@@ -134,10 +135,10 @@ for (var r in routes) {
 // set up our general 404 error handler
 app.use(function(req, res, next) {
   // pass it down to the general error handler
-  next(NotFound('404 error occurred while attempting to load ' + req.url));
+  next(ServerErrors.NotFound('404 error occurred while attempting to load ' + req.url));
 });
 
 // the catch all and, general error handler. use next(err) to send it through this
-app.use(require('./utils/generalErrorHandler'));
+app.use(require('./utils/general-error-handler'));
 
 module.exports = app;

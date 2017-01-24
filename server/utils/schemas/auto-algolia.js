@@ -1,13 +1,13 @@
 'use strict';
 
-module.exports = function SchemaUtils(schema, initOptions) {
-  var algoliaFunctions = initOptions ? initOptions.algoliaFunctions : null;
-  var errorsOnNotFound = initOptions ? initOptions.errorsOnNotFound : false;
-  var updateIfAnyField = initOptions ? initOptions.updateIfAnyField : null;
-  var removeIfFieldSet = initOptions && initOptions.removeIfFieldSet !== null ? initOptions.removeIfFieldSet : ['removed'];
+module.exports = function AutoAlgolia(schema, initOptions) {
+  const algoliaFunctions = initOptions ? initOptions.algoliaFunctions : null;
+  const errorsOnNotFound = initOptions ? initOptions.errorsOnNotFound : false;
+  const updateIfAnyField = initOptions ? initOptions.updateIfAnyField : null;
+  const removeIfFieldSet = initOptions && initOptions.removeIfFieldSet !== null ? initOptions.removeIfFieldSet : ['removed'];
 
-  var updateFieldsCount = updateIfAnyField ? updateIfAnyField.length : 0;
-  var removeFieldsCount = removeIfFieldSet ? removeIfFieldSet.length : 0;
+  const updateFieldsCount = updateIfAnyField ? updateIfAnyField.length : 0;
+  const removeFieldsCount = removeIfFieldSet ? removeIfFieldSet.length : 0;
 
   function determineAndPerform(item, shouldRemove, shouldUpdate, next) {
     if (algoliaFunctions) {
@@ -27,11 +27,11 @@ module.exports = function SchemaUtils(schema, initOptions) {
       options = {new: true};
     }
 
-    var shouldRemove = false;
-    var shouldUpdate = !updateIfAnyField;
+    let shouldRemove = false;
+    let shouldUpdate = !updateIfAnyField;
 
     // doc protection! prevent wiping a document out by forgetting a $set
-    for (var prop in updater) {
+    for (let prop in updater) {
       if (prop[0] !== '$') {
         if (removeIfFieldSet.indexOf(prop) !== -1) {
           shouldRemove = shouldRemove || updater[prop];
@@ -44,8 +44,8 @@ module.exports = function SchemaUtils(schema, initOptions) {
         updater.$set[prop] = updater[prop];
         delete updater[prop];
       } else if (prop === '$set' || prop === '$inc') {
-        var fieldVals = updater[prop];
-        for (var p in fieldVals) {
+        const fieldVals = updater[prop];
+        for (let p in fieldVals) {
           if (removeIfFieldSet.indexOf(p) !== -1) {
             shouldRemove = shouldRemove || fieldVals[p];
             shouldUpdate = shouldUpdate || !fieldVals[p];
@@ -68,9 +68,7 @@ module.exports = function SchemaUtils(schema, initOptions) {
           done(null, item);
         });
       } else if (errorsOnNotFound) {
-        var error = new Error('The item was not found.');
-        error.status = 404;
-        return done(error);
+        return done(ServerErrors.NotFound('The item was not found.'));
       }
 
       return done();
@@ -79,12 +77,12 @@ module.exports = function SchemaUtils(schema, initOptions) {
 
   if (algoliaFunctions) {
     schema.pre('save', function(next) {
-      var item = this;
+      const item = this;
 
-      var shouldRemove = false;
-      var shouldUpdate = !updateIfAnyField;
+      let shouldRemove = false;
+      let shouldUpdate = !updateIfAnyField;
 
-      var i = 0;
+      let i = 0;
       for (i = 0; i < removeFieldsCount; i++) {
         if (item.isModified(removeIfFieldSet[i])) {
           shouldRemove = shouldRemove || item[removeIfFieldSet[i]];
@@ -103,7 +101,7 @@ module.exports = function SchemaUtils(schema, initOptions) {
     });
 
     schema.pre('remove', function(next) {
-      var item = this;
+      const item = this;
       algoliaFunctions.remove(item, next);
     });
   }

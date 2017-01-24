@@ -1,6 +1,6 @@
 const bluebird = require('bluebird');
 
-module.exports = function wrapAsync(genFn, isErrorHandler) {
+module.exports = function coWrapRoute(genFn, isErrorHandler) {
   const cr = bluebird.coroutine(genFn);
 
   if (isErrorHandler) {

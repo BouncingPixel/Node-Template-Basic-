@@ -1,7 +1,7 @@
 'use strict';
 
-var winston = require('winston');
-var nconf = require('nconf');
+const logger = require('winston');
+const nconf = require('nconf');
 
 function _determineLogMessage(data, defaultMessage) {
   if (!data) {
@@ -13,11 +13,9 @@ function _determineLogMessage(data, defaultMessage) {
   }
 }
 
-module.exports = function(err, req, res, next) {
-  var statusCode = err.status || 500;
+module.exports = function generalErrorHandler(err, req, res, _next) {
+  const statusCode = err.status || 500;
   res.status(statusCode);
-
-  console.log(err);
 
   if (statusCode === 401) {
     if (req.xhr) {
@@ -27,8 +25,8 @@ module.exports = function(err, req, res, next) {
     return res.redirect(nconf.get('redirectOn401'));
   }
 
-  var view = 'errors/500';
-  var defaultMessage = 'An error has occured';
+  let view = 'errors/500';
+  let defaultMessage = 'An error has occured';
 
   if (statusCode === 403) {
     view = 'errors/403';
@@ -41,7 +39,9 @@ module.exports = function(err, req, res, next) {
     defaultMessage = 'The request was invalid';
   }
 
-  var logMessage = _determineLogMessage(err, defaultMessage);
+  const logMessage = _determineLogMessage(err, defaultMessage);
+
+  logger.info(logMessage);
 
   if (req.xhr) {
     return res.send(logMessage);

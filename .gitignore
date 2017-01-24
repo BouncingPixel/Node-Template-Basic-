@@ -40,6 +40,9 @@ Icon?
 ##########################
 node_modules
 dev_conf.js
+.config
+.npm
+.node-gyp
 
 # Composer Vendors #
 ####################

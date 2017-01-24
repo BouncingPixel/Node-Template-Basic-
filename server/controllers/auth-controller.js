@@ -5,7 +5,7 @@ module.exports = {
     res.okRedirect({status: true}, '/');
   },
 
-  failedLogin: function(err, req, res, next) {
+  failedLogin: function(err, req, res, _next) {
     if (!req.wantsJSON) {
       req.flash(err.message);
     }
@@ -16,7 +16,7 @@ module.exports = {
     res.okRedirect({status: true}, '/');
   },
 
-  failedToken: function(err, req, res, next) {
+  failedToken: function(err, req, res, _next) {
     if (!req.wantsJSON) {
       req.flash(err.message);
     }

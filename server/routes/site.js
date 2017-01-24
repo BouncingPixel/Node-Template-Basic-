@@ -5,10 +5,11 @@ module.exports = router;
 
 // require all controllers and middleware in
 const controllers = require('./controllers/');
-const middleware = require('./middleware/');
+const middleware = require('./middlewares/');
 
 // some helpers
-const wrapAsync = require('./utils/wrap');
-const renderStaticPage = require('./utils/renderStaticPage');
+const coWrapRoute = require('./utils/co-wrap-route');
+const renderStaticPage = require('./utils/render-static-page');
 
-router.get('/', controllers.FooController.index);
+// define routes below
+// router.get('/', controllers.FooController.index);

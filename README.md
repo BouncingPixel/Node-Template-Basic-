@@ -2,37 +2,65 @@
 
 ## Table of Contents:
 
+- [Working With the Template](#working-with-the-template)
 - [Directory Structure](#directory-structure)
 - [Default Packages](#default-packages)
 - [Other packages for tasks](#other-packages-for-tasks)
 - [Configuration](#configuration)
-- [Working With the Template](#working-with-the-template)
 - [Other notes](#other-notes)
+
+## Working With the Template
+
+### System Requirements
+
+- NodeJS 6 LTS
+- MongoDB
+
+### Features
+
+### Adding routes
+
+### Returning errors
+
+### Customization examples
+
+#### No users required, client-facing only
+
+#### Users required, admin-facing only
 
 ## Directory Structure
 
 ```
 / (project root)
 ├── client/ (if using webpack or similar client-side build tool)
+├── config/
+│ ├── config.json
+│ └── local.json
 ├── mockups/
+├── public/
+│ ├── css/
+│ ├── images/
+│ └── js/
 ├─┬ server/
-│ ├─┬ assets/
-│ │ ├── css/
-│ │ ├── images/
-│ │ └── js/
-│ ├── config/
-│ │ └── local.json
 │ ├── controllers/
+│ ├── emails/
+│ ├── errors/
 │ ├── middleware/
+│ ├── models/
 │ ├── responses/
-│ ├── utils/
+│ ├── routes/
+│ ├── services/
+│ ├─┬ utils/
+│ │ └── schemas/
 │ ├── views/
-│ ├── routes.js
-│ └── server.js
+│ └── index.js
 ├── working/
 ├── .gitignore
 ├── .slugignore
 ├── .s2iignore
+├── app.js
+├── express-server.js
+├── newrelic.js
 └── package.json
 ```
 
@@ -45,23 +73,39 @@ These directories are used to house any PSDs and other assets in progress.
 If using a client-side build tool such as `webpack`, use the `/client/` directory to store all the client-side
 JavaScript. The resulting output of `webpack` would be in `/server/assets/js/`.
 
-### /server/assets/
+### /public/
 
 This directory stores the public served static assets such as css, images, and JS. If using webpack,
-the resulting output from webpack would live in the `/server/assets/js/` directory. The source of the JS
+the resulting output from webpack would live in the `/public/js/` directory. The source of the JS
 would be in `/client/`.
 
-### /server/config/local.json
+### /config/
 
-A gitignored file that may be created to store local specific settings. Default configuration is placed in server.js.
-- For Heroku, these settings are set via the environment variables.
-- For Openshift/Devserver, these settings are set via the environment variables.
-- For development, use the local.json.
+See the section [Configuration](#configuration).
 
 ### /server/controllers/
 
 Controllers handle much of the logic of the application and also contain the Route handlers.
 Generally, split the Controllers by purpose or data types.
+
+### /server/emails/
+
+The email folder is used to store the configuration and dust template files for each email that could be sent.
+An email type must contain both files: a JS file which exports an object containing the configuration for that email,
+and a dust file defining the template to be displayed to the end user. For mass-sent emails that need individual variables,
+Mailgun supports per-recipient variables. Expose the variable in the configuration using `individualVars`, and then
+use the format `%recipient.VARIABLE%` where `VARIABLE` is the name of the variable exposed. All variables shared between
+all recipients can skip the Mailgun template variables and use Dust directly. These variables are exposed with `mergeVars`.
+
+Each email can define who the from address is. This can either be a function which returns the from address or a string.
+Each email can define who the to addresses are. This field is an array and can either contain a string of each email or
+an object such as `{name: "Person's name", email: "email@address.domain"}`.
+Finally, the email configuration must define a subject, which may be a function or a string.
+
+Each of the functions defined for `from`, `subject`, `individualVars`, and `mergeVars` take only one parameter
+which contains all options passed into the call to `sendTemplateEmail`.
+
+Sending an email uses `utils/emailService.js` and the function `sendTemplateEmail`.
 
 ### /server/middleware/
 
@@ -69,15 +113,25 @@ Middleware defines logic to run before a route handler, such as verifying a user
 extra information prior to handling a route. The extra information could be shared among multiple routes
 and makes it simpler to pull in one place instead of remembering to include in each route.
 
+### /server/models/
+
 ### /server/responses/
 
 Responses are utilities that handle differences between XHR and standard HTTP requests. They also make it
 easier to display error pages.
 
+### /server/routes/
+
+### /server/services/
+
 ### /server/utils/
 
 Utils is used for utilities shared between various controllers and/or other subsystems. This could include
 handy functions, data fetchers, external API handlers, and more.
+
+#### /server/utils/co-wrap-route.js
+#### /server/utils/render-static-page.js
+
 
 ### /server/views/
 
@@ -212,6 +266,13 @@ and not disrupt the project-wide config.json.
 - `redirectOn401`
   The page to redirect to when a 401 (not authenticated) occurs and the request was not JSON. Defaults to `/login`.
 
+Optional:
+- noCaptcha:
+  - `nocaptchaSecret`
+    The secret, or API key, to use with nocaptcha validation. If not set, the captcha will be bypassed (always pass).
+  - `nocaptchaBypass`
+    True or false (boolean) to bypass the captcha. Useful for local environments without the need for captcha during testing.
+
 Heroku/Production (ENV variable) Only:
 - `NEW_RELIC_APP_NAME`
 - `NEW_RELIC_LICENSE_KEY`
@@ -223,8 +284,6 @@ New Relic for Node.js halted startup due to an error:
 Error: Not starting without license key!
 ```
 This is expected as only the production code should contain the license key.
-
-## Working With the Template
 
 ## Other notes
 

@@ -1,10 +1,20 @@
 'use strict';
 
-var mongoose = require('mongoose');
-var bcrypt = require('bcrypt');
-var Types = mongoose.Schema.Types;
+// order matters, so superadmin has all admin rights
+const UserRoles = [
+  'banned',
+  'inmoderation',
+  'user',
+  'moderator',
+  'admin',
+  'superadmin'
+];
+const defaultUserRole = 'user';
 
-var UserSchema = mongoose.Schema({
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+
+const UserSchema = mongoose.Schema({
   email: {
     type: String,
     unique: true,
@@ -18,8 +28,8 @@ var UserSchema = mongoose.Schema({
 
   role: {
     type: String,
-    enum: ['banned', 'inmoderation', 'user', 'moderator', 'admin', 'superadmin'],
-    default: 'user', // set your default here
+    enum: UserRoles,
+    default: defaultUserRole,
   },
 
   password: {
@@ -46,10 +56,11 @@ var UserSchema = mongoose.Schema({
   }
 });
 
-UserSchema.plugin(require('../utils/SchemaTimestamps'), {createdAtIndex: true});
+UserSchema.plugin(require('../utils/schemas/model-timestamps'), {createdAtIndex: true});
 
+// pre-hook makes sure the user's password is always hashed
 UserSchema.pre('save', function(next) {
-  var user = this;
+  let user = this;
 
   // make sure email is lowercase
   if (user.isModified('email')) {
@@ -70,5 +81,12 @@ UserSchema.pre('save', function(next) {
     next();
   });
 });
+
+UserSchema.methods.isRoleAtLeast = function(minimumRole) {
+  const userRoleIndex = UserRoles.indexOf(this.role);
+  const desiredRoleIndex = UserRoles.indexOf(minimumRole);
+
+  return userRoleIndex >= desiredRoleIndex;
+};
 
 module.exports = mongoose.model('user', UserSchema);

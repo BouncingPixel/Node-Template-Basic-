@@ -1,8 +1,9 @@
 
-module.exports = function makeGenericError(status, defaultMessage, defaultView) {
+module.exports = function makeGenericError(statusCode, defaultMessage, defaultView) {
   return function makeError(message, view) {
-    var error = new Error(message || defaultMessage);
-    error.status = status;
+    let error = new Error(message || defaultMessage);
+    error.status = statusCode;
     error.showView = view || defaultView;
+    return error;
   };
 };

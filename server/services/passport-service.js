@@ -1,15 +1,15 @@
 'use strict';
 
-var nconf = require('nconf');
-var bluebird = require('bluebird');
-var bcrypt = require('bcrypt');
-var passport = require('passport');
-var LocalStrategy = require('passport-local').Strategy;
-var RememberMeStrategy = require('passport-remember-me').Strategy;
+const nconf = require('nconf');
+const bluebird = require('bluebird');
+const bcrypt = require('bcrypt');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const RememberMeStrategy = require('passport-remember-me').Strategy;
 
-var User = require('../models/User');
-var RememberToken = require('../models/RememberToken');
-var LoginLocker = require('../models/LoginLocker');
+const User = require('../models/user');
+const RememberToken = require('../models/remember-token');
+const LoginLocker = require('../models/login-locker');
 
 /*
 login attempts need to track:
@@ -25,20 +25,18 @@ else:
 
 function generalLogin(req, user, done) {
   if (!user) {
-    var invalidError = new Error('Invalid username or password');
-    invalidError.status = 401;
-    return done(invalidError);
+    return done(ServerErrors.NotAuthorized('Invalid username or password'));
   }
 
   if (user.isLocked) {
-    var bannedError = new Error('User account is locked');
-    bannedError.status = 429;
-    return done(bannedError);
+    return done(ServerErrors.AccountLocked('User account is locked'));
   }
 
   req.session.regenerate(function() {
     req.logIn(user, function(err) {
-      if (err) { return done(err); }
+      if (err) {
+        return done(err);
+      }
 
       // if there's anything specific about the session that needs to be stored
       req.session.startAt = new Date().getTime();
@@ -48,14 +46,14 @@ function generalLogin(req, user, done) {
   });
 }
 
-var PassportController = {
+const PassportController = {
 
   serializeUser: function(user, done) {
     done(null, JSON.stringify({id: user.id}));
   },
 
   deserializeUser: function(req, info, done) {
-    var obj = JSON.parse(info);
+    const obj = JSON.parse(info);
 
     User.findOne({id: obj.id}, function(err, user) {
       done(err, user);
@@ -68,15 +66,15 @@ var PassportController = {
     passReqToCallback: true
   },
   function(req, email, password, done) {
-    var lowerEmail = email.toLowerCase();
+    const lowerEmail = email.toLowerCase();
 
-    var userPromise = User.findOne({
+    const userPromise = User.findOne({
       email: lowerEmail,
       role: {$ne: 'noaccess'},
       deactivatedat: null
     });
 
-    var lockerPromise = LoginLocker.findOne({email: lowerEmail});
+    const lockerPromise = LoginLocker.findOne({email: lowerEmail});
 
     bluebird.all([
       userPromise,
@@ -89,43 +87,42 @@ var PassportController = {
 
       // TODO: add audit log
 
-      var checkPassword = user ? user.password : 'THISISNOTVALIDPASSWORD';
-      return bcrypt.compare(password, checkPassword);
-    }).then(function(isValid) {
-      if (isValid) {
-        ret = user;
-        if (lockInfo) {
-          lockInfo.failedCount = 0;
-          return lockInfo.save().then(function() {
+      const checkPassword = user ? user.password : 'THISISNOTVALIDPASSWORD';
+      return bcrypt.compare(password, checkPassword).then(function(isValid) {
+        if (isValid) {
+          if (lockInfo) {
+            lockInfo.failedCount = 0;
+            return lockInfo.save().then(function() {
+              return user;
+            });
+          } else {
             return user;
-          });
+          }
         } else {
-          return user;
-        }
-      } else {
-        if (!lockInfo) {
-          lockInfo = new LoginLocker();
-        }
-        // TODO: can we make this atomic?
-        lockInfo.failedCount += 1;
+          if (!lockInfo) {
+            lockInfo = new LoginLocker();
+          }
+          // TODO: can we make this atomic?
+          lockInfo.failedCount += 1;
 
-        var maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
-        var maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
-        if (lockInfo.failedCount > maxFailTries) {
-          lockInfo.lockedUntil = Math.min(
-            maxLockTime,
-            Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
-          );
-        }
+          const maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
+          const maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
+          if (lockInfo.failedCount > maxFailTries) {
+            lockInfo.lockedUntil = Math.min(
+              maxLockTime,
+              Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
+            );
+          }
 
-        return lockInfo.save().then(function() {
-          // weird, but we need to return a boolean if they successfully logged in
-          // not the user itself
-          return false;
-        });
-      }
-    }).then(function(ret) {
-      done(null, ret);
+          return lockInfo.save().then(function() {
+            // weird, but we need to return a boolean if they successfully logged in
+            // not the user itself
+            return false;
+          });
+        }
+      });
+    }).then(function(toReturn) {
+      done(null, toReturn);
     }).catch(done);
   }),
 
@@ -135,16 +132,16 @@ var PassportController = {
     passReqToCallback: true
   },
   function(req, email, token, done) {
-    var lowerEmail = email.toLowerCase();
+    const lowerEmail = email.toLowerCase();
 
-    var userPromise = User.findOne({
+    const userPromise = User.findOne({
       email: lowerEmail,
       role: {$ne: 'noaccess'},
       deactivatedat: null,
       tokenexpire: {$gte: new Date()}
     });
 
-    var lockerPromise = LoginLocker.findOne({email: lowerEmail});
+    const lockerPromise = LoginLocker.findOne({email: lowerEmail});
 
     bluebird.all([
       userPromise,
@@ -155,37 +152,44 @@ var PassportController = {
         return done(null, false);
       }
 
-      var checkToken = user ? user.logintoken : 'THISISNOTVALIDPASSWORD';
-      return bcrypt.compare(token, checkToken);
-    }).then(function(isValid) {
-      // we don't mess with the lock out with tokens, but we could
-      if (!isValid) {
-        return false;
-      }
+      const checkToken = user ? user.logintoken : 'THISISNOTVALIDPASSWORD';
+      return bcrypt.compare(token, checkToken).then(function(isValid) {
+        // we don't mess with the lock out with tokens, but we could
+        if (!isValid) {
+          return false;
+        }
 
-      user.logintoken = null;
-      user.tokenexpire = null;
-      return user.save().then(function() {
-        // weird, but we need to return a boolean if they successfully logged in
-        // not the user itself
-        return true;
+        user.logintoken = null;
+        user.tokenexpire = null;
+        return user.save().then(function() {
+          // weird, but we need to return a boolean if they successfully logged in
+          // not the user itself
+          return true;
+        });
       });
-    }).then(function(ret) {
-      done(null, ret);
+    }).then(function(toReturn) {
+      done(null, toReturn);
     }).catch(done);
   }),
 
   rememberMeStrategy: new RememberMeStrategy(function(token, done) {
     RememberToken.consume(token, function(err, userId) {
-      if (err) { return done(err); }
-      if (!userId) { return done(null, false); }
+      if (err) {
+        return done(err);
+      }
+      if (!userId) {
+        return done(null, false);
+      }
 
       return User.findOne({_id: userId}).exec(done);
     });
   },
   function(user, done) {
     RememberToken.generate(user.id, function(err, token) {
-      if (err) { return done(err); }
+      if (err) {
+        return done(err);
+      }
+
       return done(null, token);
     });
   }),
@@ -205,7 +209,7 @@ var PassportController = {
         return next(err);
       }
 
-      var cookieInfo = {path: '/', httpOnly: true, maxAge: 2 * 7 * 24 * 3600 * 1000};
+      let cookieInfo = {path: '/', httpOnly: true, maxAge: 2 * 7 * 24 * 3600 * 1000};
       if (nconf.get('requireSSL') === true || nconf.get('requireSSL') === 'true') {
         cookieInfo.secure = true;
       }

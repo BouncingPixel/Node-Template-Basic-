@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = function SchemaTimestamps(schema, options) {
+module.exports = function ModelTimestamps(schema, options) {
   schema.add({createdAt: Date});
   schema.add({updatedAt: Date});
 

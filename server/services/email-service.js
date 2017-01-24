@@ -4,15 +4,16 @@ const async = require('async');
 const bluebird = require('bluebird');
 const path = require('path');
 const nconf = require('nconf');
+const logger = require('winston');
 
 const dust = require('dustjs-linkedin');
-const emailTemplatesPath = '../emailTemplates/';
+const emailTemplatesPath = '../emails/';
 
 const domain = nconf.get('mailgunDomain');
-var mailgun = null;
-if (domain && nconf.get('mailgunApiKey')) {
-  mailgun = require('mailgun-js')({apiKey: nconf.get('mailgunApiKey'), domain: domain});
-}
+const mailgun =
+  (domain && nconf.get('mailgunApiKey'))
+    ? require('mailgun-js')({apiKey: nconf.get('mailgunApiKey'), domain: domain})
+    : null;
 
 function formatEmailAddress(person) {
   if (typeof person === 'string') {
@@ -33,7 +34,7 @@ function getValue(item, opts) {
   return item;
 }
 
-var templateCache = {};
+let templateCache = {};
 
 module.exports = bluebird.promisifyAll({
 
@@ -52,18 +53,18 @@ module.exports = bluebird.promisifyAll({
       return done(null);
     }
 
-    var templateName = opts.template;
+    const templateName = opts.template;
 
     if (!templateCache[templateName]) {
       templateCache[templateName] = require(path.resolve(__dirname, '..', 'emails', templateName));
     }
-    var template = templateCache[templateName];
+    const template = templateCache[templateName];
 
     if (!template) {
       return done(null);
     }
 
-    var recipients = getValue(template.to, opts) ||
+    const recipients = getValue(template.to, opts) ||
       opts.recipients.filter(function(person) {
         if (typeof person === 'string') {
           return true;
@@ -76,33 +77,33 @@ module.exports = bluebird.promisifyAll({
       return done(null);
     }
 
-    var toEmails = recipients.map(formatEmailAddress);
+    const toEmails = recipients.map(formatEmailAddress);
 
-    var fromEmail = getValue(template.from, opts) || 'noreply@smallcellsite.com';
+    const fromEmail = getValue(template.from, opts) || 'noreply@smallcellsite.com';
 
-    var individualVars = recipients.reduce(function(obj, recipient) {
-      var mergeVars = template.individualVars(recipient, opts);
+    const individualVars = recipients.reduce(function(obj, recipient) {
+      const mergeVars = template.individualVars(recipient, opts);
       if (mergeVars) {
         obj[recipient.email] = mergeVars;
       }
       return obj;
     }, {});
 
-    var subject = getValue(template.subject, opts);
+    const subject = getValue(template.subject, opts);
 
     async.waterfall([
       function(callback) {
-        var locals = template.mergeVars(opts);
+        let locals = template.mergeVars(opts);
         locals.emailurl = nconf.get('siteDomain');
-        var renderOptions = {
+        const renderOptions = {
           view: null,
           views: emailTemplatesPath,
           name: templateName,
           ext: '.dust',
           locals: locals
         };
-        var context = dust.context({}, renderOptions).push(locals);
-        var templatePath = path.resolve(__dirname, '..', 'emails', templateName);
+        const context = dust.context({}, renderOptions).push(locals);
+        const templatePath = path.resolve(__dirname, '..', 'emails', templateName);
         dust.render(templatePath, context, callback);
       },
 
@@ -112,7 +113,7 @@ module.exports = bluebird.promisifyAll({
           return;
         }
 
-        var dataToSend = {
+        const dataToSend = {
           from: fromEmail,
           to: toEmails,
           subject: subject,
@@ -123,6 +124,8 @@ module.exports = bluebird.promisifyAll({
         mailgun.messages().send(dataToSend, callback);
       }
     ], function(err) {
+      // we only log mail errors, but silently ignore for the user, so their request continues
+      logger.warn(err);
       done(null);
     });
   }
