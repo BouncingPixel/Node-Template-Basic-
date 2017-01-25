@@ -7,12 +7,12 @@ module.exports = router;
 
 // require all controllers and middleware in
 const controllers = require('../controllers/');
-const middleware = require('../middlewares/');
+const middlewares = require('../middlewares/');
 
 const PassportService = require('../services/passport-service');
 const AuthController = controllers.AuthController;
 
-const RequireLoggedOut = middleware.RequireLoggedOut;
+const RequireLoggedOut = middlewares.RequireLoggedOut;
 
 // if rememberme is not desired, remove it from the chain
 // if you wanted always remember-me, then rig the form to always pass rememberme to be true/"true"
