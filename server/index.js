@@ -131,6 +131,8 @@ for (let r in routes) {
   app.use(r, routes[r]);
 }
 
+// add ability to display static pages inside the views/pages/ directory
+app.use(require('./utils/auto-static-routes')());
 
 // set up our general 404 error handler
 app.use(function(req, res, next) {
