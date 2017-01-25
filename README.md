@@ -22,6 +22,11 @@
 
 ### Returning errors
 
+### Using Mongoose
+### Using Algolia
+### Using Image Uploads
+### Using Direct-to-Rackspace
+
 ### Customization examples
 
 #### No users required, client-facing only

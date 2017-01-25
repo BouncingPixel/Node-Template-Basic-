@@ -58,9 +58,10 @@ module.exports = function(fields) {
       }
 
       const tmpFileName = req[fieldName][0].filename;
+      const filename = fieldInfo.filename(req, tmpFileName);
 
       return Promise.all(fieldOutputs.map(function(key) {
-        return performActionsAndUpload(tmpFileName, fieldInfo.filename, fieldInfo.extension, key, fieldInfo.out[key]);
+        return performActionsAndUpload(tmpFileName, filename, fieldInfo.extension, key, fieldInfo.out[key]);
       }));
     })).then(function() {
       cleanUpFiles(null, req, next);
@@ -102,7 +103,7 @@ module.exports = function(fields) {
 };
 
 function performActionsAndUpload(tmpFilePath, filename, extension, nameToAppend, operations) {
-  const newFileName = `${filename}_${nameToAppend}.${extension}`;
+  const newFileName = nameToAppend.length ? `${filename}_${nameToAppend}.${extension}` : `${filename}.${extension}`;
   const mimetype = mime.lookup(extension);
 
   return new Promise((resolve, reject) => {
