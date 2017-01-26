@@ -2,7 +2,7 @@
 
 module.exports = {
   login: function(req, res) {
-    res.okRedirect({status: true}, '/');
+    res.okRedirect({status: true}, '/admin/');
   },
 
   failedLogin: function(err, req, res, _next) {
