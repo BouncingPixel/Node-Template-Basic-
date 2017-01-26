@@ -57,7 +57,8 @@
 │ ├── services/
 │ ├─┬ utils/
 │ │ └── schemas/
-│ ├── views/
+│ ├─┬ views/
+│ │ └── pages/
 │ └── index.js
 ├── working/
 ├── .gitignore
@@ -141,6 +142,31 @@ handy functions, data fetchers, external API handlers, and more.
 ### /server/views/
 
 Where all the dustjs templates are. Use subfolders to organize views by purpose (layout, sidebar, user, etc)
+
+### /server/views/errors/
+
+Various templates to show for error pages. The error handler attempts to load the error page for the status and if
+that page does not exist, uses fallbacks. The following example is the order in which the system looks for pages:
+
+Example code: 503
+- errors/503.dust
+- errors/5xx.dust
+- errors/error.dust
+
+All 500-599 errors fallback to 5xx.dust, 400-499 to 4xx.dust, etc. If those pages in turn do not exist, the general
+error.dust page is used. If that page does not exist, the error message itself is sent.
+
+Each error page template has the following variables exposed:
+- `status`: The status code of the error (defaults to 500 if the error had no status code)
+- `defaultMessage`: The standard HTTP error message for that code
+- `message`: The custom message set or the standard message if no custom message was set
+- `error`: The error object that was caught by the error handler
+
+### /server/views/static/
+
+A special directory for static pages that can be served without creating express routes.
+The static pages are allowed to include layouts or partials. The only limitation is they do not access database.
+They may, however, access the current user, CSRF token, and other variables that are exposed to all routes.
 
 ### /server/routes.js
 
