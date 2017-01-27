@@ -14,9 +14,40 @@
 ### System Requirements
 
 - NodeJS 6 LTS
-- MongoDB
+- MongoDB 3.x
 
 ### Features
+
+- MVC style
+- Mongoose for ORM functionality and schema enforcement
+- Rackspace uploads with imagemagick integration
+- Algolia integration with Mongoose models
+- Emails with Mailgun
+- Route auto-generation for static pages
+  - Able to work with new files in dev mode
+- Response utilities integrated into `res`:
+  - `ok`: helper to respond with JSON for ajax or rendered-view for non-ajax
+  - `okRedirect`: helper to respond with JSON for ajax or redirect to page for non-ajax
+- Error page detection for errors to allow unique pages for specific errors or general pages for the remainder
+- Pre-built User model with auto-bcrypt prior to save
+- User role levels to control levels of access
+- Passport for login in case other integrations are desirable (ex: Facebook, Google, LinkedIn, etc)
+- Remember-Me token capability
+- Forgot password token generation and login
+- Pre-built user middlewares for:
+  - Require logged in
+  - Require logged out
+  - Require user's role is at least some level
+- Security:
+  - Lock login attempts after a certain number of incorrect attempts
+  - Login attempts are protected from timing attacks
+  - CSRF attack mitigation
+  - X-FRAME-OPTIONS requires same origin to prevent Clickjacking
+- Command line tools for performing common tasks:
+  - Inserting new data into the database using Mongoose model schemas
+  - *Coming soon* Automatically configure Rackspace for direct-to-rackspace uploads
+  - *Coming soon* Clear and resync Algolia indecies if an out-of-sync occurs
+  - *Coming soon* Reset the password of a user to a specific password
 
 ### Adding routes
 
@@ -38,11 +69,11 @@
 ```
 / (project root)
 ├── client/ (if using webpack or similar client-side build tool)
-├── config/
+├─┬ config/
 │ ├── config.json
 │ └── local.json
 ├── mockups/
-├── public/
+├─┬ public/
 │ ├── css/
 │ ├── images/
 │ └── js/
@@ -58,7 +89,7 @@
 │ ├─┬ utils/
 │ │ └── schemas/
 │ ├─┬ views/
-│ │ └── pages/
+│ │ └── static/
 │ └── index.js
 ├── working/
 ├── .gitignore
@@ -128,7 +159,20 @@ easier to display error pages.
 
 ### /server/routes/
 
+`index.js` exports various parts.
+The key of the export will be the sub-path that an imported router will attach to.
+The value should be an imported router from another file.
+Only one path may be '/' and others should use sub-paths for clarity.
+
+Additional files create an Express-Router to handle subpaths. The routes themselves will be defined in these files.
+The route handlers should reference a library, a middleware, or a function defined within the controllers directory.
+
+If a route handler uses async or generator, please use the util
+
 ### /server/services/
+
+Services are different utilities that are not handlers for routes, but are utilities controllers and other areas
+may utilize to perform functions. Example services include rackspace, email, and passport.
 
 ### /server/utils/
 
@@ -187,13 +231,6 @@ begin configuring and `npm install --save package` to save packages to package.j
 
 ## Default Packages
 
-A default package.json is not included as versions would need to be consistently bumped.
-
-```
-npm install --save bcrypt express body-parser compression connect-flash cookie-parser express-session adaro winston express-winston
-```
-
-
 ### express
 
 `express` is our default web server. As of version 4, much of the functionality
@@ -202,6 +239,7 @@ has been split into separate modules. The following are the standard list of mod
 * `body-parser`: required to parse a POST body
 * `compression`: used to gzip responses
 * `connect-flash`: used for "flash" messages. Saving information between POST->redirect flows for example.
+* `consolidate`: used to render templates
 * `cookie-parser`: required to parse cookies.
 * `express-session`: required for sessions
   * `connect-mongo` or `connect-redis` optional session-stores. `express-session` uses memory which only works
@@ -219,7 +257,7 @@ version of NodeJS in use. `bcrypt` is a native module and requires the following
 While the `bcrypt-nodejs` package looks desirable as it does not require native compilation, the native
 code is more performant, updated more often, and is in use by more projects.
 
-### dustjs
+### dustjs-linkedin and dustjs-helpers
 
 The LinkedIn fork of DustJS is our default template system. In order to simplify rendering of templates,
 `consolidate` is used to handle the caching, rendering, and `express` bindings. For client side requirements,
@@ -235,8 +273,8 @@ to send console logs automatically to the external service.
 ## Other packages for tasks
 
 * `async`: highly recommended for async code, though Promises+Bluebird may be used without `async`.
+* `axios`: library for making POST and GET requests with Promise returns.
 * `bluebird`: if using Promises, Bluebird is a top promise implementation. Better than the native Promises.
-* `lodash`: useful utility library for data manipulation
 * `csurf`: useful security tool for CSRF protection and others. Mostly we just use the CSRF part.
 * `moment`: date and timezone handling library
 * `mongoose`: Mongo ORM
@@ -297,12 +335,33 @@ and not disrupt the project-wide config.json.
 - `redirectOn401`
   The page to redirect to when a 401 (not authenticated) occurs and the request was not JSON. Defaults to `/login`.
 
-Optional:
+Other configuration for optional modules:
 - noCaptcha:
   - `nocaptchaSecret`
     The secret, or API key, to use with nocaptcha validation. If not set, the captcha will be bypassed (always pass).
   - `nocaptchaBypass`
     True or false (boolean) to bypass the captcha. Useful for local environments without the need for captcha during testing.
+- Rackspace:
+  - `rackspaceContainer`
+     Required for any rackspace capability. This is the name of the container containing all the files.
+  - `rackspaceUsername`
+     Required for any rackspace capability. This is the username to log into Rackspace.
+  - `rackspaceApiKey`
+     Required for any rackspace capability. This is the API Key required to authenticate with Rackspace instead of using a password.
+  - `rackspaceMosso`
+     Required for the direct-to-rackspace uploads. Each account has a URL with a folder that starts with "Mosso"
+  - `rackspaceHmacKey`
+     Required for the direct-to-rackspace uploads. The HMAC key is set on Rackspace for securing direct file uploads.
+- Algolia
+  - `algoliaAppId`
+    The ID of the app in Algolia containing all the indecies.
+  - `algoliaApiKey`
+    The read+write API key used on the server side. This should not be exposed to the client side.
+  - `algoliaIndexPrefix`
+    All indecies should be named with the prefix, followed by underscore, followed by the name of the data model.
+    The prefix allows for multiple instances (dev, staging, prod, per-user etc) to share an app ID and not conflict.
+    Algolia does not have a naming standard, but this is what we have come up with and decided to follow.
+
 
 Heroku/Production (ENV variable) Only:
 - `NEW_RELIC_APP_NAME`
@@ -315,6 +374,10 @@ New Relic for Node.js halted startup due to an error:
 Error: Not starting without license key!
 ```
 This is expected as only the production code should contain the license key.
+Newrelic should not initialize causing this error message if the license key is not defined,
+but in the event a developer machine sees it, this is ok.
+
+However, the above is an error if seen on a production system.
 
 ## Other notes
 
