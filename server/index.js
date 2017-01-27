@@ -19,7 +19,6 @@ winston.debug('Loading express server');
 
 const express = require('express');
 const app = express.Router();
-const PassportService = require('./services/passport-service');
 
 if (nconf.get('requireHTTPS') === true || nconf.get('requireHTTPS') === 'true') {
   app.use(function(req, res, next) {
@@ -62,10 +61,11 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 
+const PassportService = require('./services/passport-service');
 passport.serializeUser(PassportService.serializeUser);
 passport.deserializeUser(PassportService.deserializeUser);
 
-passport.use('login', PassportService.loginStrategy);
+passport.use(PassportService.localStrategy);
 passport.use('passwordless', PassportService.passwordlessStrategy);
 passport.use('remember-me', PassportService.rememberMeStrategy);
 app.use(passport.authenticate('remember-me'));

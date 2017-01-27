@@ -64,7 +64,7 @@
         </li>
 
         <li class="bold"><a href="/admin/page" class="waves-effect waves-teal">Page</a></li>
-        <li class="bold"><a href="/admin/page" class="waves-effect waves-teal">Page</a></li>
+        <li class="bold"><a href="/auth/logout" class="waves-effect waves-teal">Logout</a></li>
       </ul>
     </header>
 

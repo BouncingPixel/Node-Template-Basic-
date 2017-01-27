@@ -7,7 +7,7 @@ module.exports = function(roleName) {
       return;
     }
 
-    if (req.user.isRoleAtLeast(roleName)) {
+    if (!req.user.isRoleAtLeast(roleName)) {
       next(ServerErrors.Forbidden('You do not have permission to access this page'));
       return;
     }
