@@ -46,7 +46,7 @@ Promise
   .resolve(true)
   .then(() => {
     // load up mongoose. may even need to load other things
-    winston.debug('Connect to mongoose database ' + nconf.get('mongoConnectStr'));
+    winston.debug('Connect to mongoose database');
     return mongoose.connect(nconf.get('mongoConnectStr'), {autoindex: process.env.NODE_ENV !== 'production'});
   })
   .then(() => {

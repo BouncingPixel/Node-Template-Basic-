@@ -35,4 +35,5 @@ router.post(
   AuthController.failedToken
 );
 
+router.get('/logout', PassportService.logout, AuthController.logout);
 router.post('/logout', PassportService.logout, AuthController.logout);

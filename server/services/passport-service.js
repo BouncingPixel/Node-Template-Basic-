@@ -4,6 +4,7 @@ const nconf = require('nconf');
 const bluebird = require('bluebird');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
+const logger = require('winston');
 const LocalStrategy = require('passport-local').Strategy;
 const RememberMeStrategy = require('passport-remember-me').Strategy;
 
@@ -41,12 +42,11 @@ function generalLogin(req, user, done) {
       // if there's anything specific about the session that needs to be stored
       req.session.startAt = new Date().getTime();
       done();
-      return;
     });
   });
 }
 
-const PassportController = {
+const PassportService = {
 
   serializeUser: function(user, done) {
     done(null, JSON.stringify({id: user.id}));
@@ -55,12 +55,12 @@ const PassportController = {
   deserializeUser: function(req, info, done) {
     const obj = JSON.parse(info);
 
-    User.findOne({id: obj.id}, function(err, user) {
+    User.findOne({_id: obj.id}, function(err, user) {
       done(err, user);
     });
   },
 
-  loginStrategy: new LocalStrategy({
+  localStrategy: new LocalStrategy({
     usernameField: 'email',
     passwordField: 'password',
     passReqToCallback: true
@@ -227,7 +227,8 @@ const PassportController = {
 
       // passport's default behavior is not to prevent session fixation, so we do it ourselves
       generalLogin(req, user, next);
-    });
+      // next();
+    })(req, res, next);
   },
 
   passwordlessLogin: function(req, res, next) {
@@ -237,7 +238,7 @@ const PassportController = {
       }
 
       generalLogin(req, user, next);
-    });
+    })(req, res, next);
   },
 
   logout: function(req, res, next) {
@@ -250,4 +251,4 @@ const PassportController = {
 
 };
 
-module.exports = PassportController;
+module.exports = PassportService;

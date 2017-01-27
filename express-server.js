@@ -11,6 +11,8 @@ const winston = require('winston');
 const app = express();
 
 winston.debug('Configuring express for dust using consolidate');
+// require in the helpers, will expose them to dust for us
+require('./dust-helpers');
 app.engine('dust', cons.dust);
 app.set('view engine', 'dust');
 app.set('views', 'views');

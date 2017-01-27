@@ -2,6 +2,9 @@
 
 const logger = require('winston');
 const nconf = require('nconf');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 function _determineLogMessage(data, defaultMessage) {
   if (!data) {
@@ -25,23 +28,20 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
     return res.redirect(nconf.get('redirectOn401'));
   }
 
-  let view = 'errors/500';
-  let defaultMessage = 'An error has occured';
+  const defaultMessage = http.STATUS_CODES[statusCode] || http.STATUS_CODES[500];
 
-  if (statusCode === 403) {
-    view = 'errors/403';
-    defaultMessage = 'Forbidden';
-  } else if (statusCode === 404) {
-    view = 'errors/404';
-    defaultMessage = 'File not Found';
-  } else if (statusCode >= 400 && statusCode < 500) {
-    view = 'errors/400';
-    defaultMessage = 'The request was invalid';
-  }
+  // check if the view file exists and use that
+  // if not, check if view.substring(0, end-2) + 'xx' exists and use that
+  // if not, then check if error/error.dust exists and use that
+  // if not, then just send the message
+
 
   const logMessage = _determineLogMessage(err, defaultMessage);
 
-  logger.info(logMessage);
+  if (statusCode >= 500 || statusCode === 400) {
+    logger.warn(logMessage);
+    logger.warn(err);
+  }
 
   if (req.xhr) {
     return res.send(logMessage);
@@ -53,8 +53,48 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
     return;
   }
 
-  res.render(view, {
-    status: statusCode,
-    message: logMessage
+  const specificPage = `errors/${statusCode}`;
+  const possibleViews = [
+    specificPage,
+    specificPage.substr(0, specificPage.length - 2) + 'xx',
+    'errors/error'
+  ];
+
+  findExistingErrorPage(possibleViews, function(_err, view) {
+    if (!view) {
+      res.send(logMessage);
+      return;
+    }
+
+    res.render(view, {
+      status: statusCode,
+      defaultMessage: defaultMessage,
+      message: logMessage,
+      error: err
+    });
   });
+
 };
+
+// never returns errors, because we are trying to handle an error anyway
+// will default to returning no page (undefined) if all possibleViews encounter errors
+function findExistingErrorPage(possibleViews, done) {
+  if (possibleViews.length) {
+    const view = possibleViews.shift();
+    const viewPath = path.resolve(__dirname, '..', '..', 'views', view + '.dust');
+
+    fs.access(viewPath, fs.constants.R_OK, (err) => {
+      if (err) {
+        // if cannot access that one, then try the next one
+        findExistingErrorPage(possibleViews, done);
+        return;
+      }
+
+      done(null, view);
+    });
+    return;
+  }
+
+  // nothing found
+  done();
+}

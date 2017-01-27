@@ -1,0 +1,36 @@
+{>"layouts/admin" /}
+
+{<doc_title}Login{/doc_title}
+{<page_title}Login{/page_title}
+
+{<main_content}
+      <div class="container">
+        <div class="row">
+
+          <form class="col s12" action="/auth/login" method="POST">
+            <input type="hidden" name="_csrf" value="{_csrf}" >
+
+            <div class="row">
+              <div class="input-field col s12">
+                <input id="email" name="email" type="text" class="validate">
+                <label for="email">Email</label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="input-field col s12">
+                <input id="password" name="password" type="password" class="validate">
+                <label for="password">Password</label>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="input-field col s12">
+                <button class="btn waves-effect waves-light right" type="submit">Login</button>
+              </div>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+{/main_content}

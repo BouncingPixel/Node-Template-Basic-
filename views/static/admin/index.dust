@@ -1,0 +1,16 @@
+{>"layouts/admin" /}
+
+{<doc_title}Dashboard{/doc_title}
+{<page_title}Dashboard{/page_title}
+
+{<main_content}
+      <div class="container">
+        <div class="row">
+
+          <div class="col s12 l12">
+            You are logged in!
+          </div>
+
+        </div>
+      </div>
+{/main_content}
