@@ -55,7 +55,101 @@
   - *Coming soon* Clear and resync Algolia indecies if an out-of-sync occurs
   - *Coming soon* Reset the password of a user to a specific password
 
-### Adding routes
+### Style guide
+
+1. Files should be named all lowercase with dashes separating words
+2. Two space indentation should be used
+3. Semicolons should always be used
+4. Avoid unused variables and parameters with some exceptions on functions. Use a leading `_` to ignore a parameter.
+5. Use Unix style linebreaks
+6. Use single quotes or backtic-quotes (templatized strings)
+7. Always use curly braces
+8. Use the "one true brace" style with the opening brace on the same line. The else/elseif is also same line, ex `} else {`
+9. Avoid shadowing variables (redefining an identifier), except for `err` and `callback`
+10. Use the strict equality `===` and `!==`, except when testing for null `(obj == null)`
+12. Declare one variable per line and one variable per `var`, `const`, and `let` declaration
+13. When using commas, place the comma at the end of the line. For node, final trailing comma is acceptable. For browsers, these cause issues.
+
+### Routes
+
+#### Route groups
+Try to group common routes together in subpaths when possible.
+For example, admin related things would probably be in `/admin`
+
+To create a new subgroup:
+
+1. create a file in `server/routes/`, for example, `admin.js`.
+2. Use the following as a base template for the route:
+
+```js
+// this first is required to set up express
+const express = require('express');
+const router = express.Router();
+module.exports = router;
+
+// require all controllers and middleware in
+const controllers = require('../controllers/');
+const middlewares = require('../middlewares/');
+
+// some helpers
+const coWrapRoute = require('../utils/co-wrap-route');
+const renderStaticPage = require('../utils/render-static-page');
+
+// add routes below
+```
+
+3. Feel free to remove any requires not needed by your routes
+4. Add your subgroup to the `server/routes/index.js` file, example:
+
+```js
+exports['/admin'] = require('./admin');
+```
+
+#### Adding a route to a group
+
+Routes themselves use Controllers for the handler. A route group may reference more than one controller
+and a controller may be used by more than one route group. Controllers should be grouped by common
+functionality or common data. For example, a User Controller contains handlers related to users such as
+signing up, editting account information, and viewing profiles.
+These functions may be used in different subgroups. There is no set standard on exactly how to separate
+functionality, just use best judgement.
+
+To add a route:
+
+1. Add the route to the route group using express syntax
+2. The URL is relative to the sub-group the routes will be mapped to.
+   A route for `/` in the group `/admin` will be `/admin/`.
+
+3. Add any middlewares desired
+4. Add the handler from the controller to the route
+
+For example:
+
+```js
+router.get('/profile/:userid', middlewares.requireLoggedIn, controllers.UserController.showProfile);
+```
+
+Route handlers may utilize ES6 generators to make use of `yield`. ES6 is a great way to avoid direct use
+of Async and Promises making the code look synchronous. If the middleware or controller use generators,
+then use the `server/utils/co-wrap-route.js` utility.
+
+For example:
+
+```js
+router.get(
+  '/profile/:userid',
+  coWrapRoute(middlewares.requireLoggedInGen),
+  coWrapRoute(controllers.UserController.showProfileGen)
+);
+```
+
+#### Adding a controller
+
+Controllers are simply an exported object where the keys of the object are used as route handlers.
+
+1. Add a file with the desired name, such as `user-controller.js`
+2. Export a single object containing all the handlers
+3. Add the controller to the `server/controllers/index.js`
 
 ### Returning errors
 

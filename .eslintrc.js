@@ -60,7 +60,7 @@ module.exports = {
             "last"
         ],
         "eol-last": [
-            "error",
+            "warn",
         ],
         "key-spacing": [
             "error",
@@ -74,7 +74,7 @@ module.exports = {
             "error",
         ],
         "no-trailing-spaces": [
-            "error",
+            "warn",
         ],
         "one-var": [
             "error",
