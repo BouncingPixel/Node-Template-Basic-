@@ -53,10 +53,10 @@ const UserSchema = mongoose.Schema({
   },
   toJSON: {
     virtuals: true
-  }
+  },
+  timestamps: true
 });
 
-UserSchema.plugin(require('../utils/schemas/model-timestamps'), {createdAtIndex: true});
 
 // pre-hook makes sure the user's password is always hashed
 UserSchema.pre('save', function(next) {

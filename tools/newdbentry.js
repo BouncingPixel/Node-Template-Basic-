@@ -88,7 +88,6 @@ Promise
         // let errorMessage = `Invalid entry for ${key}`;
 
         if (schemaProp.type === String) {
-          keyProps.type = 'string';
           keyProps.type = 'input';
 
           if (schemaProp.minlength && schemaProp.maxlength) {
@@ -128,9 +127,7 @@ Promise
           }
         } else if (schemaProp.type === Number) {
           keyProps.type = 'input';
-          keyProps.type = 'number';
         } else if (schemaProp.type === Boolean) {
-          keyProps.type = 'boolean';
           keyProps.type = 'confirm';
         } else {
           // skip dates and others for now?
@@ -140,10 +137,8 @@ Promise
         if (Array.isArray(schemaProp.enum)) {
           keyProps.type = 'list';
           keyProps.choices = schemaProp.enum;
-          // errorMessage = `${key} must be one of: [${schemaProp.enum.join(', ')}]`;
         } else if (key === 'password') {
           keyProps.type = 'password';
-          // keyProps.replace = '*';
         }
 
         // keyProps.message = errorMessage;

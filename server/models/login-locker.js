@@ -23,7 +23,8 @@ const LoginLockerSchema = mongoose.Schema({
   },
   toJSON: {
     virtuals: true
-  }
+  },
+  timestamps: true
 });
 
 module.exports = mongoose.model('loginlocker', LoginLockerSchema);

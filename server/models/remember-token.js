@@ -23,7 +23,8 @@ const RememberTokenSchema = mongoose.Schema({
   },
   toJSON: {
     virtuals: true
-  }
+  },
+  timestamps: true
 });
 
 RememberTokenSchema.statics.generate = function generate(userId, done) {
