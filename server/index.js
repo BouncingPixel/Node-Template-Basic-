@@ -136,8 +136,11 @@ app.use(require('./utils/auto-static-routes')());
 
 // set up our general 404 error handler
 app.use(function(req, res, next) {
-  // pass it down to the general error handler
-  next(ServerErrors.NotFound('404 error occurred while attempting to load ' + req.url));
+  // if headers were sent, we assume something must have handled it and just ended with a next() call anyway
+  if (!res.headersSent) {
+    // pass it down to the general error handler
+    next(ServerErrors.NotFound('404 error occurred while attempting to load ' + req.url));
+  }
 });
 
 // the catch all and, general error handler. use next(err) to send it through this
