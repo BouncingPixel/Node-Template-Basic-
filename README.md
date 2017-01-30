@@ -15,6 +15,12 @@
 
 - NodeJS 6 LTS
 - MongoDB 3.x
+- Yarn (an alternative to npm). Install with `npm install -g yarn`
+
+#### Optional (suggested)
+
+- ESLint: Helps with keeping code style and prevents a limited, yet common set of bugs through static analysis.
+  Install with `npm install -g eslint`
 
 ### Features
 
@@ -152,6 +158,11 @@ and makes it simpler to pull in one place instead of remembering to include in e
 
 ### /server/models/
 
+The template uses Mongoose for connecting to Mongo DB. Mongoose uses Models to define the schema and any utility functions.
+Mongoose also has hook capability to perform actions before other actions, such as bcrypting a password before saving.
+All models should be in this location. Models are not auto-loaded, so they must be required individually by any file
+which may use them.
+
 ### /server/responses/
 
 Responses are utilities that handle differences between XHR and standard HTTP requests. They also make it
@@ -180,8 +191,22 @@ Utils is used for utilities shared between various controllers and/or other subs
 handy functions, data fetchers, external API handlers, and more.
 
 #### /server/utils/co-wrap-route.js
-#### /server/utils/render-static-page.js
 
+A utility function for using ES6 generators as an Express handler. Automatically calls next with any errors.
+This utility allows the use of `yield` and `yield*` within `function*(req, req)` or `function*(err, req, req)`.
+
+`coWrapRoute(genFn, continueAfter)`
+
+- `genFn` is the generator function to be executed. If the generator takes 2 parameters, it is considered as
+  not an error handler. The two parameters are `req` and `res`. If the generator takes 3 (or more) parameters,
+  it is considered an error handler. The three parameters passed are `err`, `req`, and `res`. Following the
+  end of the function, `next()` will be called. If no handler causes anything to be sent, the 404 page will
+  be displayed to the end user.
+
+#### /server/utils/render-page.js
+
+A utility function to create an Express route handler for rendering a page with a static set of locals.
+The page to be rendered also will have access to any res.locals or app.locals set prior to the render call.
 
 ### /server/views/
 
@@ -381,8 +406,9 @@ However, the above is an error if seen on a production system.
 
 ## Other notes
 
-Please make use of `npm shrinkwrap`. While --save-exact may seem like an answer, it does not prevent
-a dependency from installing an incorrect dependency. The shrinkwrap prevents issues where production or
-another developer have different versions of a dependency (or dependency of a dependency). Shrinkwrap will
-also generate a verification hash of the package as a security benefit in case a malicious script overwrites
-a build on NPM.
+Due to `npm shrinkwrap` having issues with some 3.x versions, we have opted to make use of the `yarn` package manager.
+Please use `yarn` and commit the `yarn.lock` file to maintain versions between developers and production.
+While --save-exact may seem like an answer, it does not prevent a dependency from installing an incorrect dependency.
+`yarn.lock` prevents issues where production or another developer have different versions of a dependency
+(or dependency of a dependency). `yarn.lock` will also generate a verification hash of the package as a security benefit
+in case a malicious script overwrites a build on NPM.
