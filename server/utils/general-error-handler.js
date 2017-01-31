@@ -53,12 +53,14 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
     return;
   }
 
-  const specificPage = `errors/${statusCode}`;
+  const statusCodePage = `errors/${statusCode}`;
   const possibleViews = [
-    specificPage,
-    specificPage.substr(0, specificPage.length - 2) + 'xx',
+    err.showView,
+    statusCodePage,
+    statusCodePage.substr(0, statusCodePage.length - 2) + 'xx',
     'errors/error'
-  ];
+  ].filter((page) => page != null);
+  // remove nulls/undefineds because the first might not actually be set
 
   findExistingErrorPage(possibleViews, function(_err, view) {
     if (!view) {

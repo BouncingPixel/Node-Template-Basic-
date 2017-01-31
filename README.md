@@ -151,7 +151,52 @@ Controllers are simply an exported object where the keys of the object are used 
 2. Export a single object containing all the handlers
 3. Add the controller to the `server/controllers/index.js`
 
-### Returning errors
+### Error Handling
+
+All errors should be passed to next() or thrown in a generator. In most cases, the general error handler is sufficient.
+In the occasion the error should be handled in a specific nature, either use a specific error-handling-middleware
+for that route or handle the error directly in the middleware where the error occurs.
+
+The general error handler will either send a message via JSON for AJAX calls or it will render an error page.
+Errors can have a custom field, status, which defines which HTTP status code to use for that error.
+If the status is not defined, a 500 status is assumed. A globally defined utility, `ServerErrors`, exists to help
+generate errors with status defined for you. The following helper functions exist on `ServerErrors` to set specific codes:
+
+| Error         | Status |
+|---------------|:------:|
+| BadRequest    |  400   |
+| NotAuthorized |  401   |
+| Banned        |  402   |
+| Forbidden     |  403   |
+| NotFound      |  404   |
+| AccountLocked |  429   |
+| ServerError   |  500   |
+
+To raise one of these errors, you may either:
+- call `next`, for example: `next(ServerErrors.BadRequest('My Error Message'));`
+- or throw the error, for example `throw ServerErrors.BadRequest('My Error Message');`
+
+**Important** Be sure to immediately follow a `return` statement after using `next()` or `throw`.
+
+The first parameter to a function defined in `ServerErrors` is the message to be thrown. A second, optional parameter
+to the function allows one to customize the exact view template to use when rendering an error page.
+Alternatively, when using Error, `status` may be set along with `showView` to define the specific template.
+
+When the generic error handler is rendering a page, it may use fallback pages if the specified page does not exist.
+The order the error handler will try is defined by:
+
+- The template set in `showView`, passed to `ServerErrors` second parameter, or based on the default for the `ServerErrors`
+- A template based on the status code
+- A template based on the status code class (ex all 400-499 fall back to 4xx and 500-599 fall back to 5xx)
+- A generic template used to catch all
+- Just rendering the string out
+
+Example code: 503 with `showView` set to "errors/oops"
+- errors/oops.dust
+- errors/503.dust
+- errors/5xx.dust
+- errors/error.dust
+- No template, just send the string
 
 ### Using Mongoose
 ### Using Algolia
@@ -311,13 +356,7 @@ Where all the dustjs templates are. Use subfolders to organize views by purpose 
 Various templates to show for error pages. The error handler attempts to load the error page for the status and if
 that page does not exist, uses fallbacks. The following example is the order in which the system looks for pages:
 
-Example code: 503
-- errors/503.dust
-- errors/5xx.dust
-- errors/error.dust
-
-All 500-599 errors fallback to 5xx.dust, 400-499 to 4xx.dust, etc. If those pages in turn do not exist, the general
-error.dust page is used. If that page does not exist, the error message itself is sent.
+See above section on [Error Handling](#error-handling)
 
 Each error page template has the following variables exposed:
 - `status`: The status code of the error (defaults to 500 if the error had no status code)
