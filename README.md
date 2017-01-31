@@ -60,9 +60,9 @@
   - X-FRAME-OPTIONS requires same origin to prevent Clickjacking
 - Command line tools for performing common tasks:
   - Inserting new data into the database using Mongoose model schemas
-  - *Coming soon* Automatically configure Rackspace for direct-to-rackspace uploads
-  - *Coming soon* Clear and resync Algolia indecies if an out-of-sync occurs
   - *Coming soon* Reset the password of a user to a specific password
+  - Automatically configure Rackspace for direct-to-rackspace uploads
+  - *Coming soon* Clear and resync Algolia indecies if an out-of-sync occurs
 
 ### Style guide
 
