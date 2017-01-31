@@ -261,7 +261,11 @@ The system will convert uploaded images to the desired format before uploading.
 Configuring the uploader will allow imagemagick operations to occur on an image and store the resulting file.
 An uploaded file can have multiple derivative files with different operations, such as different resizings.
 
-Use the middleware `UploadResizedImage` to add this functionality to a route. For example:
+Use the middleware `UploadResizedImage` to add this functionality to a route.
+`UploadResizedImage` is a factory that generates a middleware using an options array. The options array
+specifies which images may be uploaded, how they may be manipulated, and the resulting filenames.
+For imagine manipulation, any `fn` may be a function in the package `gm` and `args` are passed to the function call.
+For example:
 
 - the image will be in the form field: `image`
 - the user is uploading a file named `myfile.png`
