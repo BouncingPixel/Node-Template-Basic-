@@ -9,6 +9,7 @@
   - [Routes and Controllers](#routes-and-controllers)
   - [Error Handling](#error-handling)
   - [Using Mongoose](#using-mongoose)
+  - [Using Datatables](#using-datatables)
   - [Using Algolia](#using-algolia)
   - [Using Image Uploads](#using image-uploads)
   - [Using Direct-to-Rackspace](#using-direct-to-rackspace)
@@ -38,6 +39,7 @@
 - Rackspace uploads with imagemagick integration
 - Algolia integration with Mongoose models
 - Emails with Mailgun
+- Datatables route handler generator
 - Route auto-generation for static pages
   - Able to work with new files in dev mode
 - Response utilities integrated into `res`:
@@ -220,6 +222,18 @@ Some models may also define hooks to perform actions following other actions. Fo
 hook to bcrypt a newly set password before saving to the database. Using hooks helps ensure actions which must always occur
 following another action do happen. This mitigates the possibility of a developer performing one action and forgetting to
 perform the necessary actions before or after.
+
+### Using Datatables
+
+Datatable integration is provided through the controller: `server/controllers/datatable-controller.js`. This controller contains one
+factory method, `makeHandler`, which generates a route handler for a specific model. Just pass a reference to the desired
+model. Searching, pagination, sorting, and fetching only the necessary data is built in.
+
+Example:
+
+```js
+router.get('/tabledata', controllers.DatatableController.makeHandler(require('../models/User')));
+```
 
 ### Using Algolia
 
