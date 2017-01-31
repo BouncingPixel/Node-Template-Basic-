@@ -4,7 +4,6 @@ const nconf = require('nconf');
 const bluebird = require('bluebird');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
-const logger = require('winston');
 const LocalStrategy = require('passport-local').Strategy;
 const RememberMeStrategy = require('passport-remember-me').Strategy;
 

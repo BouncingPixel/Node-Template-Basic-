@@ -62,7 +62,7 @@ function addRoutesInDir(baseDir, dir, router) {
 function createStaticHandler() {
   return function(req, res, next) {
     // also, make sure if it ends in a slash, then use index.dust
-    const urlpath = 'static/' + req.path.substr(1) + (req.path[req.path.length-1] === '/' ? 'index' : '');
+    const urlpath = 'static/' + req.path.substr(1) + (req.path[req.path.length - 1] === '/' ? 'index' : '');
     const pagePath = path.resolve(baseViewsDir, urlpath + '.dust');
 
     // security: make sure someone doesnt navigate out of the top folder with urlpath
