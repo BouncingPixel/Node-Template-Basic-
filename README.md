@@ -62,7 +62,7 @@
   - Inserting new data into the database using Mongoose model schemas
   - Reset the password of a user to a specific password
   - Automatically configure Rackspace for direct-to-rackspace uploads
-  - *Coming soon* Clear and resync Algolia indecies if an out-of-sync occurs
+  - Clear and resync Algolia indecies if an out-of-sync occurs
 
 ### Style guide
 
