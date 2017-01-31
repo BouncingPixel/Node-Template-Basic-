@@ -3,6 +3,15 @@
 ## Table of Contents:
 
 - [Working With the Template](#working-with-the-template)
+  - [System Requirements](#system-requirements)
+  - [Features](#features)
+  - [Style guide](#style-guide)
+  - [Routes and Controllers](#routes-and-controllers)
+  - [Error Handling](#error-handling)
+  - [Using Mongoose](#using-mongoose)
+  - [Using Algolia](#using-algolia)
+  - [Using Image Uploads](#using image-uploads)
+  - [Using Direct-to-Rackspace](#using-direct-to-rackspace)
 - [Directory Structure](#directory-structure)
 - [Default Packages](#default-packages)
 - [Other packages for tasks](#other-packages-for-tasks)
@@ -70,7 +79,7 @@
 12. Declare one variable per line and one variable per `var`, `const`, and `let` declaration
 13. When using commas, place the comma at the end of the line. For node, final trailing comma is acceptable. For browsers, these cause issues.
 
-### Routes
+### Routes and Controllers
 
 #### Route groups
 Try to group common routes together in subpaths when possible.
@@ -199,15 +208,120 @@ Example code: 503 with `showView` set to "errors/oops"
 - No template, just send the string
 
 ### Using Mongoose
+
+The template utilizes Mongoose for working with Mongo data. Mongoose uses schemas and models to provide structure.
+These models also make defining relationships, querying data, and other tasks simpler by having a defined structure.
+
+Adding a new model and schema is simply adding a file to `server/models` and using standard Mongoose to define everything.
+The file should export the final resulting model. The schema does not need to be exported as it can be retrieved by the model.
+
+Some models can define instance and static utility functions to aid in fetching or performing tasks on the data.
+Some models may also define hooks to perform actions following other actions. For example, the User model may use an pre-save
+hook to bcrypt a newly set password before saving to the database. Using hooks helps ensure actions which must always occur
+following another action do happen. This mitigates the possibility of a developer performing one action and forgetting to
+perform the necessary actions before or after.
+
 ### Using Algolia
+
+Please see the [Configuration](#configuration) in the optional portion on configuring Algolia.
+
+Algolia is a 3rd party search engine that can be integrated for searching a site's data.
+Algolia is an optional utility that is not required, but is included as it commonly is required.
+
+The provided Algolia integration acts as a plugin for Mongoose schemas. The plugin adds post-save hooks to automatically
+synchronize data with Algolia. The plugin allows a person to define which fields to listen for changes if not all fields are desired.
+The plugin can also automatically remove entries from Algolia when a field is set.
+Functions will also be added to the model to query the search index and to save or remove a data object from Algolia.
+
+The plugin assumes each model will have a separate search index. Currently, there is no support for an index with data
+collected from multiple models. This functionality may be added later if there is a need for it.
+
+To add the plugin to the schema, use the `plugin` method and pass any desired options for the plugin:
+
+```js
+MySchema.plugin(require('../utils/schemas/algolia-methods'), {
+  autoSave: true, // boolean if the auto-save post-save hook should be enabled
+  includeObjectInIndex: fn, // a function to determine if a particular object should be included in Algolia
+  castToObject: fn, // a function to convert an object into the exact data format to be stored in Algolia
+  indexName: str, // the name of the index. with the prefixing system, this is just the 2nd half of the Algolia index name
+  errorsOnNotFound: false, // boolean if the function findOneUpdateAndSync does not find an object to update
+  updateIfAnyField: null, // an array of fields that when changed, will cause an automatic sync to Algolia
+                          // the default null will assume any change should be sync'd to Algolia
+  removeIfFieldSet: ['removed'] // an array of fields that when set to a truthy value will remove the object from Algolia
+                                // when unset, the object will be added to Algolia
+});
+```
+
 ### Using Image Uploads
+
+Please see the [Configuration](#configuration) in the optional portion on configuring Rackspace.
+
+Image uploads are processed using `multer`, `gm` (imagemagick) and `pkgcloud` to upload to Rackspace.
+The system will convert uploaded images to the desired format before uploading.
+Configuring the uploader will allow imagemagick operations to occur on an image and store the resulting file.
+An uploaded file can have multiple derivative files with different operations, such as different resizings.
+
+Use the middleware `UploadResizedImage` to add this functionality to a route. For example:
+
+- the image will be in the form field: `image`
+- the user is uploading a file named `myfile.png`
+- we would like the original, but in jpg, keeping the original file name
+- we would like a 600 wide resize, then crop to 600x300, saved with a `_wall` added to the name
+- we would like a 200 wide resize, then crop to 200x60, saved with a `_tile` added to the name
+
+```js
+router.post('/uploadFile', middlewares.uploadResizedImage([
+  {
+    field: 'image',
+    isRequired: true,
+    filename: (req, file) => {
+      // return just the name portion of the filename of the file the user uploaded
+      // alternatively, for random names that will not overlap:
+      // look to use uuid's uuid.v4() or shortid's shortid.generate
+      return path.parse(file.filename).name;
+    },
+    extention: 'jpg',
+    out: {
+      // keep the original with default name as well by doing this:
+      '': [],
+      'wall': [
+        {fn: 'resize', args: [600]},
+        {fn: 'crop', args: [600, 300]}
+      ],
+      'tile': [
+        {fn: 'resize', args: [200]},
+        {fn: 'crop', args: [200, 60]}
+      ]
+    }
+  },
+  // can have multiple fields as well, but only 1 image uploaded per field
+]));
+
+```
+
 ### Using Direct-to-Rackspace
 
-### Customization examples
+Please see the [Configuration](#configuration) in the optional portion on configuring Rackspace.
 
-#### No users required, client-facing only
+Another option for file uploads is to bypass the server and upload directly to Rackspace.
+This option saves the server resources, but does not permit modifying the file. In these cases,
+using a service such as Imgix will allow efficient resizing and cropping per image to happen.
+In the case where many users may be uploading images at any time, this may be the optimal option.
 
-#### Users required, admin-facing only
+1. The Rackspace container must be configured with CORS enabled and an HMAC key.
+   A provided tool will help enable these settings and generate a secure, random HMAC key.
+   The tool with ask which domains will be allowed access to upload from.
+   The key should then be added to the configuration.
+
+2. The page that shows the upload will need to use the middleware `UploadDirectVarFactory` to
+   generate the settings for the form. The Dust template for the form must set all the necessary
+   form fields with the provided settings. The middleware accepts two parameters:
+   - `redirectTo`: the path portion of the URL to redirect to after the upload is complete
+   - `fileNameFactory(req)`: a function to determine the filename-prefix and path to store in Rackspace.
+     The exact filename may not be known and is not sent to the `returnTo`. To get around this, one may use
+     a hidden iframe to submit the form, use JS to listen to onLoad events in the iframe, and when the iframe
+     navigates to the `returnTo` page, check for an error. If no error occurred, then the full filename is:
+     the result of the `fileNameFactory(req)` + the filename in the file-input field (fetchable with JS).
 
 ## Directory Structure
 
@@ -270,6 +384,8 @@ See the section [Configuration](#configuration).
 Controllers handle much of the logic of the application and also contain the Route handlers.
 Generally, split the Controllers by purpose or data types.
 
+See [Routes and Controllers](#routes-and-controllers) for more information.
+
 ### /server/emails/
 
 The email folder is used to store the configuration and dust template files for each email that could be sent.
@@ -317,7 +433,7 @@ Only one path may be '/' and others should use sub-paths for clarity.
 Additional files create an Express-Router to handle subpaths. The routes themselves will be defined in these files.
 The route handlers should reference a library, a middleware, or a function defined within the controllers directory.
 
-If a route handler uses async or generator, please use the util
+See [Routes and Controllers](#routes-and-controllers) for more information.
 
 ### /server/services/
 

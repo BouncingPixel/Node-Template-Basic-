@@ -35,7 +35,9 @@ module.exports = function AutoAlgolia(schema, initOptions) {
     throw new Error('Cannot add Algolia methods without proper configuration');
   }
 
-  const includeInIndex = initOptions.includeInIndex || defaultIncludeInIndex;
+  const autoSave = initOptions.autoSave == null ? true : initOptions.autoSave;
+
+  const includeObjectInIndex = initOptions.includeObjectInIndex || defaultIncludeInIndex;
   const castToObject = initOptions.castToObject || defaultCastToObject;
 
   const index = client.initIndex(algoliaIndexPrefix + '_' + initOptions.indexName);
@@ -56,7 +58,7 @@ module.exports = function AutoAlgolia(schema, initOptions) {
     },
 
     update: function(obj, done) {
-      if (!includeInIndex(obj)) {
+      if (!includeObjectInIndex(obj)) {
         done();
         return;
       }
@@ -138,35 +140,37 @@ module.exports = function AutoAlgolia(schema, initOptions) {
     });
   };
 
-  // hooks to handle auto-updating Algolia
-  schema.pre('save', function(next) {
-    const item = this;
+  if (autoSave) {
+    // hooks to handle auto-updating Algolia
+    schema.pre('save', function(next) {
+      const item = this;
 
-    let shouldRemove = false;
-    let shouldUpdate = !updateIfAnyField;
+      let shouldRemove = false;
+      let shouldUpdate = !updateIfAnyField;
 
-    let i = 0;
-    for (i = 0; i < removeFieldsCount; i++) {
-      if (item.isModified(removeIfFieldSet[i])) {
-        shouldRemove = shouldRemove || item[removeIfFieldSet[i]];
-        // even if one field states to remove, this is ok
-        shouldUpdate = shouldUpdate || !item[removeIfFieldSet[i]];
+      let i = 0;
+      for (i = 0; i < removeFieldsCount; i++) {
+        if (item.isModified(removeIfFieldSet[i])) {
+          shouldRemove = shouldRemove || item[removeIfFieldSet[i]];
+          // even if one field states to remove, this is ok
+          shouldUpdate = shouldUpdate || !item[removeIfFieldSet[i]];
+        }
       }
-    }
-    for (i = 0; i < updateFieldsCount; i++) {
-      if (item.isModified(updateIfAnyField[i])) {
-        shouldUpdate = true;
-        break;
+      for (i = 0; i < updateFieldsCount; i++) {
+        if (item.isModified(updateIfAnyField[i])) {
+          shouldUpdate = true;
+          break;
+        }
       }
-    }
 
-    determineAndPerform(item, shouldRemove, shouldUpdate, next);
-  });
+      determineAndPerform(item, shouldRemove, shouldUpdate, next);
+    });
 
-  schema.pre('remove', function(next) {
-    const item = this;
-    algoliaFunctions.remove(item, next);
-  });
+    schema.pre('remove', function(next) {
+      const item = this;
+      algoliaFunctions.remove(item, next);
+    });
+  }
 
   // instance members to save or remove an object from Algolia
   schema.methods.saveToAlgolia = function(done) {
