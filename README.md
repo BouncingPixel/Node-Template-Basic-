@@ -11,7 +11,8 @@
   - [Using Mongoose](#using-mongoose)
   - [Using Datatables](#using-datatables)
   - [Using Algolia](#using-algolia)
-  - [Using Image Uploads](#using image-uploads)
+  - [Using Image Uploads](#using-image-uploads)
+  - [Using File Uploads](#using-file-uploads)
   - [Using Direct-to-Rackspace](#using-direct-to-rackspace)
 - [Directory Structure](#directory-structure)
 - [Default Packages](#default-packages)
@@ -137,7 +138,7 @@ To add a route:
 For example:
 
 ```js
-router.get('/profile/:userid', middlewares.requireLoggedIn, controllers.UserController.showProfile);
+router.get('/profile/:userid', middlewares.RequireLoggedIn, controllers.UserController.showProfile);
 ```
 
 Route handlers may utilize ES6 generators to make use of `yield`. ES6 is a great way to avoid direct use
@@ -149,7 +150,7 @@ For example:
 ```js
 router.get(
   '/profile/:userid',
-  coWrapRoute(middlewares.requireLoggedInGen),
+  coWrapRoute(middlewares.RequireLoggedInGen),
   coWrapRoute(controllers.UserController.showProfileGen)
 );
 ```
@@ -288,7 +289,7 @@ For example:
 - we would like a 200 wide resize, then crop to 200x60, saved with a `_tile` added to the name
 
 ```js
-router.post('/uploadFile', middlewares.uploadResizedImage([
+router.post('/uploadImage', middlewares.UploadResizedImage([
   {
     field: 'image',
     isRequired: true,
@@ -314,7 +315,30 @@ router.post('/uploadFile', middlewares.uploadResizedImage([
   },
   // can have multiple fields as well, but only 1 image uploaded per field
 ]));
+```
 
+### Using File Uploads
+
+File uploads are similar to the image uploads, but with a few differences.
+The file upload's `filename` function should contain both the filename and the extension.
+There is no file type conversion. There is no imagemagick to perform any manipulations.
+The file simply is uploaded to Rackspace with the designated filename as is.
+
+```js
+router.post('/uploadFile', middlewares.UploadFile([
+  {
+    field: 'file',
+    isRequired: true,
+    filename: (req, file) => {
+      // return the full tilename
+      // alternatively, for random names that will not overlap:
+      // look to use uuid's uuid.v4() or shortid's shortid.generate
+      // then append the extesion to it (path.parse(file.filename).ext)
+      return file.filename;
+    }
+  },
+  // can have multiple fields as well, but only 1 file uploaded per field
+]));
 ```
 
 ### Using Direct-to-Rackspace

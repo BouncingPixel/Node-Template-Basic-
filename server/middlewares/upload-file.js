@@ -4,10 +4,8 @@ const multer = require('multer');
 const mime = require('mime');
 const bluebird = require('bluebird');
 const fs = require('fs');
+const path = require('path');
 const fsunlink = bluebird.promisify(fs.unlink);
-
-const gm = require('gm');
-const imageMagick = gm.subClass({ imageMagick: true });
 
 const uploadStorage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -24,13 +22,8 @@ const RackspaceService = require('../services/rackspace-service');
 // fields: an array of objects containing:
 //    field: the name of the POST field with the file
 //    isRequired: boolean to denote if the file is required (true) or optional (false)
-//    filename: the name of the file to use
-//              receives 2 parameters: req and the uploaded filename. returns filename excluding extension
-//    extention: the desired final extension to use (will convert from any to desired)
-//    out: object where key is a string that will be inserted into the filename (filename + key + extension)
-//         the value points to an array of objects with (or an empty array to just make sure extension is correct):
-//              fn: string (crop, resize, etc; functions from imageMagick)
-//              args: array of args to pass into imageMagick
+//    filename: function to determine the name of the file to store in Rackspace
+//              receives 2 parameters: req and the uploaded filename. return full file name including extension
 module.exports = function(fields) {
   if (!fields || fields.length === 0) {
     return function(req, res, next) {
@@ -47,7 +40,6 @@ module.exports = function(fields) {
   function afterMulter(req, res, next) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
-      const fieldOutputs = Object.keys(fieldInfo.out);
 
       if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
@@ -61,9 +53,7 @@ module.exports = function(fields) {
       const tmpFileName = req[fieldName][0].filename;
       const filename = fieldInfo.filename(req, tmpFileName);
 
-      return Promise.all(fieldOutputs.map(function(key) {
-        return performActionsAndUpload(tmpFileName, filename, fieldInfo.extension, key, fieldInfo.out[key]);
-      }));
+      return performActionsAndUpload(tmpFileName, filename);
     })).then(function() {
       cleanUpFiles(null, req, next);
     }).catch(function(err) {
@@ -103,28 +93,13 @@ module.exports = function(fields) {
   };
 };
 
-function performActionsAndUpload(tmpFilePath, filename, extension, nameToAppend, operations) {
-  const newFileName = nameToAppend.length ? `${filename}_${nameToAppend}.${extension}` : `${filename}.${extension}`;
+function performActionsAndUpload(tmpFilePath, filename) {
+  const extension = path.parse(filename).ext;
   const mimetype = mime.lookup(extension);
 
-  return new Promise((resolve, reject) => {
-    const imgToStream = operations.reduce(function(img, operation) {
-      return img[operation.fn].apply(img, operation.args);
-    }, imageMagick(tmpFilePath));
-
-    imgToStream.stream(extension, function(err, stdout, _stderr) {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      resolve(stdout);
-    });
-  }).then(function(stdout) {
-    return RackspaceService.uploadStreamAsync({
-      filename: newFileName,
-      mimeType: mimetype,
-      stream: stdout
-    });
+  return RackspaceService.uploadStreamAsync({
+    filename: filename,
+    mimeType: mimetype,
+    stream: fs.createReadStream(tmpFilePath)
   });
 }
