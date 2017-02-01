@@ -16,6 +16,9 @@ if (process.env.DEV_MODE === 'true') {
   process.env.NODE_ENV = 'development';
 }
 
+const fs = require('fs');
+const path = require('path');
+
 const nconf = require('nconf');
 nconf.argv()
   .env()
@@ -50,6 +53,15 @@ Promise
     return mongoose.connect(nconf.get('mongoConnectStr'), {autoindex: process.env.NODE_ENV !== 'production'});
   })
   .then(() => {
+    // pre-load all models
+    const modelDirectory = path.resolve(__dirname, './server/models');
+    const potentialModels = fs.readdirSync(modelDirectory).filter(isJsAndNotIndex).map((model) => model.substring(0, model.length - 3));
+
+    potentialModels.map((modelFile) => {
+      return require('./server/models/' + modelFile);
+    }).filter((Model) => Model.findInAlgolia != null);
+  })
+  .then(() => {
     // load up the server
     require('./express-server');
   })
@@ -58,3 +70,7 @@ Promise
     winston.error(error);
     process.exit(1);
   });
+
+function isJsAndNotIndex(file) {
+  return file.substring(file.length - 3) === '.js' && file !== 'index.js';
+}
