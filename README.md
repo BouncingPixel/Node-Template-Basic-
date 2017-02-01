@@ -105,7 +105,6 @@ const middlewares = require('../middlewares/');
 
 // some helpers
 const coWrapRoute = require('../utils/co-wrap-route');
-const renderStaticPage = require('../utils/render-static-page');
 
 // add routes below
 ```

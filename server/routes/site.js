@@ -9,7 +9,6 @@ const middlewares = require('../middlewares/');
 
 // some helpers
 const coWrapRoute = require('../utils/co-wrap-route');
-const renderStaticPage = require('../utils/render-static-page');
 
 // define routes below
 // router.get('/', controllers.FooController.index);

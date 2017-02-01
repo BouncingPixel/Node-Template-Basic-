@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('winston');
 
-const renderStaticPage = require('./render-static-page');
+const renderPage = require('./render-page');
 
 const baseViewsDir = path.resolve(__dirname, '..', '..', 'views');
 
@@ -53,7 +53,7 @@ function addRoutesInDir(baseDir, dir, router) {
         dir = dir.substr(0, dir.length - 10);
       }
 
-      router.get(dir, renderStaticPage(path.join('static', dir)));
+      router.get(dir, renderPage(path.join('static', dir)));
     }
   });
 }
