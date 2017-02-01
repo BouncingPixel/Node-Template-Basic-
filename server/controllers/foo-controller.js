@@ -1,6 +1,6 @@
 'use strict';
 
-const User = require('../models/User');
+// const User = require('../models/User');
 
 module.exports = {
   index: function(req, res) {
@@ -8,7 +8,7 @@ module.exports = {
   },
 
   withco: function*(req, res) {
-    const someUser = yield User.findOne({});
+    // const someUser = yield User.findOne({});
 
     res.render('main', {someUser: someUser});
   }

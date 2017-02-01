@@ -27,7 +27,7 @@
 
 - NodeJS 6 LTS
 - MongoDB 3.x
-- Yarn (an alternative to npm). Install with `npm install -g yarn`
+- Yarn (an alternative to npm). See https://yarnpkg.com/docs/install
 - Webpack. Install with `npm install -g webpack`
 - ESLint: Helps with keeping code style and prevents a limited, yet common set of bugs through static analysis.
   Install with `npm install -g eslint`
