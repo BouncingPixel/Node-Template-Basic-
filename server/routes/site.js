@@ -5,13 +5,14 @@ module.exports = router;
 
 // require all controllers and middleware in
 const controllers = require('../controllers/');
-const middlewares = require('../middlewares/');
+// const middlewares = require('../middlewares/');
 
 // some helpers
 const coWrapRoute = require('../utils/co-wrap-route');
 
 // define routes below
-// router.get('/', controllers.FooController.index);
+router.get('/', controllers.FooController.index);
+router.get('/withco', coWrapRoute(controllers.FooController.withco));
 
 // example image upload:
 // form field: image
@@ -19,7 +20,7 @@ const coWrapRoute = require('../utils/co-wrap-route');
 // original size "myfile.jpg"
 // 600x300 "myfile_wall.jpg"
 // 200x60 "myfile_tile.jpg"
-// router.post('/upload', middlewares.uploadResizedImage([
+// router.post('/uploadImage', middlewares.uploadResizedImage([
 //   {
 //     field: 'image',
 //     isRequired: true,

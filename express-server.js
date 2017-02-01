@@ -4,7 +4,6 @@
 const nconf = require('nconf');
 const express = require('express');
 const compression = require('compression');
-const dust = require('dustjs-linkedin');
 const cons = require('consolidate');
 const winston = require('winston');
 
@@ -29,7 +28,7 @@ app.get('/js/config.js', function(req, res) {
 });
 
 winston.debug('Configuring express for dust using consolidate');
-// require in the helpers, will expose them to dust for us
+// require in our custom helpers, will expose them to dust for us
 require('./dust-helpers');
 app.engine('dust', cons.dust);
 app.set('view engine', 'dust');
@@ -48,7 +47,7 @@ app.use(express.static('public'));
 app.use(require('./server/'));
 
 app.listen(nconf.get('port'), function() {
-  console.log('App listening on port %s', nconf.get('port'));
+  winston.info(`App listening on port ${nconf.get('port')}`);
 });
 
 module.exports = app;

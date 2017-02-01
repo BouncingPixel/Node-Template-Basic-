@@ -1,4 +1,5 @@
-(function (root, factory) {
+/* global define */
+(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     define(['dust.core', 'moment', 'pluralize'], factory);
   } else if (typeof exports === 'object') {
@@ -119,7 +120,7 @@
         chunk.write('...');
       }
       chunk.write(value.substr(start, length));
-      if (addElipsis && valueLength > length+start) {
+      if (addElipsis && valueLength > (length + start)) {
         chunk.write('...');
       }
 
@@ -163,8 +164,8 @@
 
   //replaces \n char with <br> tag
   dust.helpers.nlToBr = function(chunk, context, bodies, params) {
-    var escape = (params.escape !== 'false');
-    var value = escape ? dust.filters.h(params.content) : params.content;
+    var shouldescape = (params.escape !== 'false');
+    var value = shouldescape ? dust.filters.h(params.content) : params.content;
     if (typeof value === 'string') {
       value = value.replace(/\n/g, '<br>');
     }
@@ -173,9 +174,9 @@
   };
 
   dust.helpers.expandableLessContent = function(chunk, context, bodies, params) {
-    var escape = (params.escape !== 'false');
+    var shouldescape = (params.escape !== 'false');
     var maxLength = params.maxLength || 250;
-    var value = escape ? dust.filters.h(params.content) : params.content;
+    var value = shouldescape ? dust.filters.h(params.content) : params.content;
 
     if (typeof value === 'string') {
       if (value.length > maxLength) {
@@ -217,7 +218,7 @@
     return value;
   };
 
-  dust.helpers.once = function(chunk, context, bodies, params) {
+  dust.helpers.once = function(chunk, context, bodies, _params) {
     var body = bodies.block;
 
     if (!body.onced) {
@@ -228,7 +229,7 @@
     return chunk;
   };
 
-  dust.helpers.thisYear = function(chunk, context, bodies, params) {
+  dust.helpers.thisYear = function(_chunk, _context, _bodies, _params) {
     var today = new Date();
     return today.getFullYear();
   };
@@ -274,7 +275,8 @@
             if (str.length > 3) {
               str = value.toFixed();
             }
-            return str + abbrs[i];;
+
+            return str + abbrs[i];
           }
         }
       }
@@ -341,7 +343,9 @@
 
   dust.filters.capitalizeWords = function(value) {
     if (typeof value === 'string') {
-      return value.split(' ').map(function(s){return s.charAt(0).toUpperCase() + s.slice(1);}).join(' ');
+      return value.split(' ').map(function(s){
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      }).join(' ');
     }
     return value;
   };
