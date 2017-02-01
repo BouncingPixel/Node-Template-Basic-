@@ -10,6 +10,7 @@
   - [Error Handling](#error-handling)
   - [Using Mongoose](#using-mongoose)
   - [Using Datatables](#using-datatables)
+  - [Single Sign On](#single-sign-on)
   - [Using Algolia](#using-algolia)
   - [Using Image Uploads](#using-image-uploads)
   - [Using File Uploads](#using-file-uploads)
@@ -54,11 +55,20 @@
   - Require logged in
   - Require logged out
   - Require user's role is at least some level
+  - File uploads
+- Single sign on capability pre-built for:
+  - Facebook
+  - Google
+  - Twitter
+  - LinkedIn
 - Security:
   - Lock login attempts after a certain number of incorrect attempts
   - Login attempts are protected from timing attacks
   - CSRF attack mitigation
   - X-FRAME-OPTIONS requires same origin to prevent Clickjacking
+  - Capability to redirect to HTTPS
+  - HSTS header when require-HTTPS is enabled
+  - Capability to redirect to required domain
 - Command line tools for performing common tasks:
   - Inserting new data into the database using Mongoose model schemas
   - Reset the password of a user to a specific password
@@ -232,6 +242,15 @@ Example:
 ```js
 router.get('/tabledata', controllers.DatatableController.makeHandler(require('../models/User')));
 ```
+
+### Single Sign On
+
+Single sign on support is pre-built for Facebook, Google, LinkedIn, and Twitter. These 4 only need to be configured to be enabled.
+
+1. Set up SSO with the provider (see provider's documentation on setting up OAuth or Single sign on)
+2. Set the `key`|`clientid`|`appid` and `secret` in the config. For example, `sso:facebook:appid` and `sso:facebook:secret`
+3. Be sure to enable the `"provider"Id` field in the User ID by uncommenting it
+4. Magic happens
 
 ### Using Algolia
 

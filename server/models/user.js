@@ -45,6 +45,19 @@ const UserSchema = mongoose.Schema({
     type: Date
   },
 
+  // uncomment if using single signon from these providers
+  // facebookId: {
+  //   type: String
+  // },
+  // googleId: {
+  //   type: String
+  // },
+  // twitterId: {
+  //   type: String
+  // },
+  // linkedinId: {
+  //   type: String
+  // },
   // Add more to the user
 
 }, {

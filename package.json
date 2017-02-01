@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "lint": "eslint server/** app.js express-server.js dust-helpers.js"
+    "lint": "eslint server/** app.js express-server.js dust-helpers.js && eslint -c .eslintrc-browser.js client/**"
   },
   "repository": {
     "type": "git",
@@ -55,5 +55,11 @@
     "pluralize": "^3.1.0",
     "validator": "^6.2.1",
     "winston": "^2.3.0"
+  },
+  "optionalDependencies": {
+    "passport-facebook": "^2.1.1",
+    "passport-google-oauth": "^1.0.0",
+    "passport-linkedin": "^1.0.0",
+    "passport-twitter": "^1.0.4"
   }
 }

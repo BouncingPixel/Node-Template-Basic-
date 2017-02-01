@@ -2,7 +2,7 @@ module.exports = {
   "env": {
     "commonjs": true,
     "es6": true,
-    "node": true
+    "browser": true
   },
   "globals": {
     "ServerErrors": true

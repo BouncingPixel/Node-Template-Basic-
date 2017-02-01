@@ -250,4 +250,136 @@ const PassportService = {
 
 };
 
+const baseUrl = (nconf.get('requireHTTPS') ? 'https://' : 'http://') + nconf.get('domain');
+
+// be user to uncomment the necessary areas in User model before enabling
+if (nconf.get('sso:facebook:appid') && nconf.get('sso:facebook:secret')) {
+  const FacebookStrategy = require('passport-facebook').Strategy;
+
+  PassportService.facebookStrategy = new FacebookStrategy({
+    clientID: nconf.get('sso:facebook:appid'),
+    clientSecret: nconf.get('sso:facebook:secret'),
+    callbackURL: baseUrl + '/auth/facebook/callback',
+    enableProof: true,
+    // add  'picture.type(large)' if you want the profile pic
+    profileFields: ['id', 'first_name', 'last_name', 'email'],
+    passReqToCallback: true
+  }, authWithSso);
+}
+
+if (nconf.get('sso:google:clientid') && nconf.get('sso:google:secret')) {
+  const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+
+  PassportService.googleStrategy = new GoogleStrategy({
+    clientID: nconf.get('sso:google:clientid'),
+    clientSecret: nconf.get('sso:google:secret'),
+    callbackURL: baseUrl + '/auth/google/callback',
+    passReqToCallback: true
+  }, authWithSso);
+}
+
+if (nconf.get('sso:twitter:key') && nconf.get('sso:twitter:secret')) {
+  const TwitterStrategy = require('passport-twitter').Strategy;
+
+  PassportService.twitterStrategy = new TwitterStrategy({
+    consumerKey: nconf.get('sso:twitter:key'),
+    consumerSecret: nconf.get('sso:twitter:secret'),
+    callbackURL: baseUrl + '/auth/twitter/callback',
+    passReqToCallback: true
+  }, authWithSso);
+}
+
+if (nconf.get('sso:linkedin:key') && nconf.get('sso:linkedin:secret')) {
+  const LinkedInStrategy = require('passport-linkedin').Strategy;
+
+  PassportService.linkedinStrategy = new LinkedInStrategy({
+    consumerKey: nconf.get('sso:linkedin:key'),
+    consumerSecret: nconf.get('sso:linkedin:secret'),
+    callbackURL: baseUrl + '/auth/linkedin/callback',
+    // add 'public-profile-url' if you want the profile pic
+    profileFields: ['id', 'first-name', 'last-name', 'email-address', 'headline'],
+    passReqToCallback: true
+  }, authWithSso);
+}
+
+function* associateProfile(user, profile) {
+  user[profile.provider + 'Id'] = profile.id;
+
+  // if you wanted to store the user's social URLs:
+  // if (profile.provider === 'facebook') {
+  //   if (!user.socialFacebookUrl || !user.socialFacebookUrl.length) {
+  //     user.socialFacebookUrl = 'https://www.facebook.com/' + profile.id;
+  //   }
+  // } else if (profile.provider === 'linkedin') {
+  //   // LinkedIn can provide us with title if we wanted it
+  //   if ((!user.title || !user.title.length) && profile._json.headline) {
+  //     user.title = profile._json.headline;
+  //   }
+
+  //   if (!user.socialLinkedinUrl || !user.socialLinkedinUrl.length) {
+  //     user.socialLinkedinUrl = profile._json.publicProfileUrl;
+  //   }
+  // } else if (profile.provider === 'twitter') {
+  //   if (!user.socialTwitterUrl || !user.socialTwitterUrl.length) {
+  //     user.socialTwitterUrl = 'https://twitter.com/intent/user?user_id=' + profile.id;
+  //   }
+  // }
+
+  return yield user.save();
+}
+
+function* continueWithProfile(profile) {
+  let matchByProvider = {};
+  matchByProvider[profile.provider + 'Id'] = profile.id;
+
+  let user = yield User.findOne(matchByProvider);
+
+  if (user) {
+    return user;
+  }
+
+  // the template requires an email for login, but in reality, the email itself could be ignored
+  // in that case, the user is required to log in with their social media forever,
+  // unless they associate an email with their account later
+  if (profile.emails == null || !Array.isArray(profile.emails) || profile.emails.length === 0) {
+    // if the system does not require emails, just skip the look up based on email and go straight to create a new account
+    throw ServerErrors.ServerError('Could not determine email to create an account');
+  }
+
+  const emails = profile.emails.map((info) => {
+    return info.value.toLowerCase();
+  });
+
+  user = yield User.findOne({emailLowercase: {$in: emails}});
+
+  // create a new account if one did not exist previously
+  if (!user) {
+    const userObj = {
+      name: [profile.name.givenName, profile.name.familyName].join(' '),
+      email: profile.emails[0].value
+    };
+
+    user = new User(userObj);
+  }
+
+  return yield* associateProfile(user, profile);
+}
+
+function* authWithSsoAsync(req, accessToken, refreshToken, profile) {
+  if (req.user) {
+    return yield* associateProfile(req.user, profile);
+  }
+
+  return yield* continueWithProfile(profile);
+}
+
+function authWithSso(req, accessToken, refreshToken, profile, done) {
+  bluebird.coroutine(
+    authWithSsoAsync(req, accessToken, refreshToken, profile)
+  ).then((user) => {
+    done(null, user);
+  }).catch((err) => {
+    done(err);
+  });
+}
 module.exports = PassportService;

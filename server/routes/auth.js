@@ -1,5 +1,8 @@
 'use strict';
 
+const nconf = require('nconf');
+const passport = require('passport');
+
 // need the express package
 const express = require('express');
 const router = express.Router();
@@ -37,3 +40,23 @@ router.post(
 
 router.get('/logout', PassportService.logout, AuthController.logout);
 router.post('/logout', PassportService.logout, AuthController.logout);
+
+if (nconf.get('sso:facebook:appid') && nconf.get('sso:facebook:secret')) {
+  router.get('/facebook', passport.authenticate('facebook', {scope: ['email', 'public_profile']}));
+  router.get('/facebook/callback', passport.authenticate('facebook'), AuthController.oathPostRedirect);
+}
+
+if (nconf.get('sso:google:clientid') && nconf.get('sso:google:secret')) {
+  router.get('/google', passport.authenticate('google', {scope: ['email', 'profile']}));
+  router.get('/google/callback', passport.authenticate('google'), AuthController.oathPostRedirect);
+}
+
+if (nconf.get('sso:twitter:key') && nconf.get('sso:twitter:secret')) {
+  router.get('/twitter', passport.authenticate('twitter', {scope: ['email']}));
+  router.get('/twitter/callback', passport.authenticate('twitter'), AuthController.oathPostRedirect);
+}
+
+if (nconf.get('sso:linkedin:key') && nconf.get('sso:linkedin:secret')) {
+  router.get('/linkedin', passport.authenticate('linkedin', {scope: ['r_basicprofile', 'r_emailaddress']}));
+  router.get('/linkedin/callback', passport.authenticate('linkedin'), AuthController.oathPostRedirect);
+}

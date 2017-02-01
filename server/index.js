@@ -66,8 +66,26 @@ passport.serializeUser(PassportService.serializeUser);
 passport.deserializeUser(PassportService.deserializeUser);
 
 passport.use(PassportService.localStrategy);
-passport.use('passwordless', PassportService.passwordlessStrategy);
-passport.use('remember-me', PassportService.rememberMeStrategy);
+
+if (PassportService.passwordlessStrategy) {
+  passport.use('passwordless', PassportService.passwordlessStrategy);
+}
+if (PassportService.rememberMeStrategy) {
+  passport.use('remember-me', PassportService.rememberMeStrategy);
+}
+if (PassportService.facebookStrategy) {
+  passport.use(PassportService.facebookStrategy);
+}
+if (PassportService.googleStrategy) {
+  passport.use(PassportService.googleStrategy);
+}
+if (PassportService.twitterStrategy) {
+  passport.use(PassportService.twitterStrategy);
+}
+if (PassportService.linkedinStrategy) {
+  passport.use(PassportService.linkedinStrategy);
+}
+
 app.use(passport.authenticate('remember-me'));
 
 // optional, but sometimes handy!
