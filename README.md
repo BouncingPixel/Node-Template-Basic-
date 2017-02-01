@@ -625,6 +625,13 @@ settings in local.json take higher priority over config.json. Thus, if you need 
 with special values separate from the project, you may define them in your local.json config file
 and not disrupt the project-wide config.json.
 
+The key "client" should be an object. This key will also be exported to the client side and accessible
+from the server side. For example, algoliaSearchKey is needed by the client. This key's value can be found
+in the ENV var: `client:algoliaSearchKey` or via the local.json `client.algoliaSearchKey`.
+If you need to access the key on the server side, use `nconf.get('client:algoliaSearchKey')`.
+If you need to access the key on the client side, make sure `/js/config.js` is loaded and access
+`algoliaSearchKey` in the config. `/js/config.js` uses UMD for the most support and works with webpack.
+
 ### Configuration keys
 
 - `mongoConnectStr`
@@ -672,6 +679,9 @@ Other configuration for optional modules:
     The ID of the app in Algolia containing all the indecies.
   - `algoliaApiKey`
     The read+write API key used on the server side. This should not be exposed to the client side.
+  - `client:algoliaSearchKey`
+    The read only API key used on the client side. This is automatically exported to the client.
+    This is optional if all searches are done server side. For client side, use the algoliasearch package.
   - `algoliaIndexPrefix`
     All indecies should be named with the prefix, followed by underscore, followed by the name of the data model.
     The prefix allows for multiple instances (dev, staging, prod, per-user etc) to share an app ID and not conflict.

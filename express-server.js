@@ -10,6 +10,24 @@ const winston = require('winston');
 
 const app = express();
 
+winston.debug('Creating client side config in /js/config.js');
+
+const cachedClientConfig = `(function(root, factory) {
+  if (typeof define === 'function' && define.amd) {
+    define('config', [], factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    SiteConfig = factory();
+  }
+}(this, function() {
+  return ${JSON.stringify(nconf.get('client'))};
+}));`;
+
+app.get('/js/config.js', function(req, res) {
+  res.status(200).send(cachedClientConfig);
+});
+
 winston.debug('Configuring express for dust using consolidate');
 // require in the helpers, will expose them to dust for us
 require('./dust-helpers');
