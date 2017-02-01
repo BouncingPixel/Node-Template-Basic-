@@ -59,6 +59,8 @@
     WI: 'Wisconsin',
     WY: 'Wyoming'
   };
+  // will be lazy loaded when needed
+  var stateToAbbr = null;
 
   dust.helpers.stateSelector = function(chunk, context, bodies, params) {
     var selectedState = params.selectedState || '';
@@ -188,6 +190,72 @@
     return chunk;
   };
 
+  dust.helpers.commaSep = function(chunk, context, bodies, params) {
+    var value = parseInt(params.value, 10).toString();
+
+    value = value.split('').reverse().join('');
+    value = value.replace(/.{3}(?!$)/g, function(match) {
+      return match + ',';
+    });
+    value = value.split('').reverse().join('');
+
+    return value;
+  };
+
+  dust.helpers.pluralize = function(chunk, context, bodies, params) {
+    var value = params.value;
+    var count = parseInt(params.count, 10) || 0;
+
+    var sub = params.sub;
+    if (sub) {
+      count = count - parseInt(sub, 10);
+    }
+
+    if (typeof value === 'string') {
+      return pluralize(value, count);
+    }
+    return value;
+  };
+
+  dust.helpers.once = function(chunk, context, bodies, params) {
+    var body = bodies.block;
+
+    if (!body.onced) {
+      body.onced = true;
+      chunk.render(body, context);
+    }
+
+    return chunk;
+  };
+
+  dust.helpers.thisYear = function(chunk, context, bodies, params) {
+    var today = new Date();
+    return today.getFullYear();
+  };
+
+  dust.filters.abbrToState = function(value) {
+    if (typeof value === 'string') {
+      return states[value];
+    }
+
+    return value;
+  };
+
+  dust.filters.stateToAbbr = function(value) {
+    if (typeof value === 'string') {
+      if (stateToAbbr === null) {
+        stateToAbbr = {};
+        for (var p in states) {
+          stateToAbbr[states[p]] = p;
+        }
+      }
+
+      return stateToAbbr[value];
+    }
+
+    return value;
+  };
+
   dust.filters.numberShortener = function(value) {
     if (typeof value === 'string') {
       value = parseInt(value, 10);
@@ -222,38 +290,6 @@
     }
 
     return value;
-  };
-
-  dust.helpers.commaSep = function(chunk, context, bodies, params) {
-    var value = parseInt(params.value, 10).toString();
-
-    value = value.split('').reverse().join('');
-    value = value.replace(/.{3}(?!$)/g, function(match) {
-      return match + ',';
-    });
-    value = value.split('').reverse().join('');
-
-    return value;
-  };
-
-  dust.helpers.pluralize = function(chunk, context, bodies, params) {
-    var value = params.value;
-    var count = parseInt(params.count, 10) || 0;
-
-    var sub = params.sub;
-    if (sub) {
-      count = count - parseInt(sub, 10);
-    }
-
-    if (typeof value === 'string') {
-      return pluralize(value, count);
-    }
-    return value;
-  };
-
-  dust.helpers.thisYear = function(chunk, context, bodies, params) {
-    var today = new Date();
-    return today.getFullYear();
   };
 
   dust.filters.timeago = function(value) {
