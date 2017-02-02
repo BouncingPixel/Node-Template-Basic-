@@ -27,7 +27,16 @@ module.exports = {
         query: {
           presets: ['es2015']
         }
+      },
+      {
+        test: /\.dust$/,
+        loader: 'dust-loader'
       }
     ]
-  }
+  },
+  plugins: [
+    new webpack.ProvidePlugin({
+      dust: 'dustjs-linkedin'
+    })
+  ]
 };

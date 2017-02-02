@@ -1452,6 +1452,10 @@ duplexify@^3.1.2:
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
 
+dust-loader@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/dust-loader/-/dust-loader-1.1.0.tgz#00973bd59c46afeadde60d6006c14024e8059584"
+
 dustjs-helpers@1.7.3:
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/dustjs-helpers/-/dustjs-helpers-1.7.3.tgz#0251349a773230e0dd67dc2ce85f528a0fb95dad"
