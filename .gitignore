@@ -52,4 +52,7 @@ vendor
 ##########################
 .ocproject
 
+# Config and Built files #
+##########################
 config/local.json
+public/js/**
