@@ -47,24 +47,33 @@ module.exports = function(fields) {
   function afterMulter(req, res, next) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
-      const fieldOutputs = Object.keys(fieldInfo.out);
 
       if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
           return Promise.reject(ServerErrors.BadRequest(`The file for ${fieldName} is missing`));
-        } else {
-          // just ignore it since it is optional
-          return Promise.resolve();
         }
       }
 
-      const tmpFileName = req[fieldName][0].filename;
-      const filename = fieldInfo.filename(req, tmpFileName);
-
-      return Promise.all(fieldOutputs.map(function(key) {
-        return performActionsAndUpload(tmpFileName, filename, fieldInfo.extension, key, fieldInfo.out[key]);
-      }));
+      return Promise.resolve();
     })).then(function() {
+      return Promise.all(fields.map(function(fieldInfo) {
+
+        const fieldName = fieldInfo.field;
+        const fieldOutputs = Object.keys(fieldInfo.out);
+
+        if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+          // just ignore it since it must be optional to get here
+          return Promise.resolve();
+        }
+
+        const tmpFileName = req[fieldName][0].filename;
+        const filename = fieldInfo.filename(req, tmpFileName);
+
+        return Promise.all(fieldOutputs.map(function(key) {
+          return performActionsAndUpload(tmpFileName, filename, fieldInfo.extension, key, fieldInfo.out[key]);
+        }));
+      }));
+    }).then(function() {
       cleanUpFiles(null, req, next);
     }).catch(function(err) {
       cleanUpFiles(err, req, next);
