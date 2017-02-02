@@ -11,6 +11,10 @@
             You are logged in!
           </div>
 
+          <div class="col s12 l12">
+            <textarea class="wyssimpleeditor"></textarea>
+          </div>
+
         </div>
       </div>
 {/main_content}
