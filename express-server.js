@@ -46,8 +46,8 @@ app.use(express.static('public'));
 // require in the bits from the app
 app.use(require('./server/'));
 
-app.listen(nconf.get('port'), function() {
-  winston.info(`App listening on port ${nconf.get('port')}`);
+app.listen(nconf.get('PORT'), function() {
+  winston.info(`App listening on port ${nconf.get('PORT')}`);
 });
 
 module.exports = app;

@@ -25,7 +25,7 @@ nconf.argv()
   .file({ file: 'config/config.json' })
   .file({ file: 'config/local.json' })
   .defaults({
-    port: 3000,
+    PORT: 3000,
     requireHTTPS: false,
     logLevel: 'debug',
     redirectOn401: '/login',
