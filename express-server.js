@@ -28,11 +28,17 @@ app.get('/js/config.js', function(req, res) {
 });
 
 winston.debug('Configuring express for dust using consolidate');
-// require in our custom helpers, will expose them to dust for us
-require('./dust-helpers');
 app.engine('dust', cons.dust);
 app.set('view engine', 'dust');
 app.set('views', 'views');
+
+// pre-initialize the dust renderer. necessary because it's possible we send an email before someone loads a page
+cons.dust.render('notatemplate', {
+  ext: app.get('view engine'),
+  views: path.resolve(__dirname, app.get('views'))
+}, function() { /* we don't care about the return, it's an error anyway. but Dust is ready now */ });
+// require in our custom helpers, and pass in dust to attach the filters/helpers to
+require('./dust-helpers')(cons.requires.dust);
 
 // don't expose we use Express. need to know basis
 app.set('x-powered-by', false);
