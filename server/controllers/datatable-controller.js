@@ -25,7 +25,7 @@ module.exports = {
       const length = req.query.length;
 
       const totalPromise = Model.count({});
-      const filtered = Model.find(query).select(columns).sort(sorter).skip(start).limit(length);
+      const filtered = Model.find(query).select(columns).sort(sorter).skip(start).limit(length).lean().exec();
 
       Promise.all([totalPromise, filtered]).then((results) => {
         const foundRecords = results[1];

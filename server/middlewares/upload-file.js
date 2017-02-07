@@ -1,7 +1,9 @@
 'use strict';
 
 const multer = require('multer');
+const csrf = require('csurf');
 const mime = require('mime');
+const async = require('async');
 const bluebird = require('bluebird');
 const fs = require('fs');
 const path = require('path');
@@ -9,7 +11,7 @@ const fsunlink = bluebird.promisify(fs.unlink);
 
 const uploadStorage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, '../tmp');
+    cb(null, path.resolve(__dirname, '../../../tmp/'));
   },
   filename: function(req, file, cb) {
     cb(null, file.originalname);
@@ -95,13 +97,18 @@ module.exports = function(fields) {
 
   // to abstract multer away, doing this to "inject" multer into the middleware stack
   return function(req, res, next) {
-    uploader(req, res, function(err) {
-      if (err) {
-        next(err);
-        return;
+    async.series([
+      function(cb) {
+        uploader(req, res, cb);
+      },
+      function(cb) {
+        csrf({cookie: true})(req, res, cb);
+      },
+      function(cb) {
+        afterMulter(req, res, cb);
       }
-
-      afterMulter(req, res, next);
+    ], function(err) {
+      next(err);
     });
   };
 };

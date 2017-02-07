@@ -75,6 +75,50 @@
     </header>
 
     <main>
+      <div class="container">
+        <div class="row">
+          {#flashError}
+          <div class="col s12">
+            <div class="card-panel red darken-4">
+              <span class="white-text">
+                {.}
+              </span>
+            </div>
+          </div>
+          {/flashError}
+
+          {#flashWarn}
+          <div class="col s12">
+            <div class="card-panel orange darken-3">
+              <span class="white-text">
+                {.}
+              </span>
+            </div>
+          </div>
+          {/flashWarn}
+
+          {#flashSuccess}
+          <div class="col s12">
+            <div class="card-panel green darken-4">
+              <span class="white-text">
+                {.}
+              </span>
+            </div>
+          </div>
+          {/flashSuccess}
+
+          {#flashInfo}
+          <div class="col s12">
+            <div class="card-panel indigo darken-4">
+              <span class="white-text">
+                {.}
+              </span>
+            </div>
+          </div>
+          {/flashInfo}
+        </div>
+      </div>
+
       {+main_content}{/main_content}
     </main>
 

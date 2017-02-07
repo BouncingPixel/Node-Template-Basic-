@@ -130,15 +130,24 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 // enable CSRF protection
-app.use(csrf({
-  cookie: true
-}));
+const csrfMiddleware = csrf({cookie: true});
+app.use(function(req, res, next) {
+  // wrap it, because multer complicates things.
+  if (req.headers['content-type'] && req.headers['content-type'].substr(0, 19).toLowerCase() === 'multipart/form-data') {
+    next();
+    return;
+  }
+
+  csrfMiddleware(req, res, next);
+});
 
 // enable other protections for the site
 app.use(function(req, res, next) {
   res.header('X-XSS-Protection', '1; mode=block');
   res.header('X-FRAME-OPTIONS', 'SAMEORIGIN');
-  res.locals._csrf = req.csrfToken();
+  if (req.method.toLowerCase() !== 'post') {
+    res.locals._csrf = req.csrfToken();
+  }
   next();
 });
 
