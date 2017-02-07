@@ -6,7 +6,8 @@ const postErrorUrl = '/login';
 
 module.exports = {
   login: function(req, res) {
-    res.okRedirect({status: true}, postLoginUrl);
+    const redirectTo = (req.session.redirectto ? req.session.redirectto : null) || postLoginUrl;
+    res.okRedirect({status: true}, redirectTo);
   },
 
   failedLogin: function(err, req, res, _next) {

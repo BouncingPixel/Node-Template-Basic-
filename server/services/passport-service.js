@@ -32,6 +32,8 @@ function generalLogin(req, user, done) {
     return done(ServerErrors.AccountLocked('User account is locked'));
   }
 
+  const saveRedirectTo = req.session.redirectto;
+
   req.session.regenerate(function() {
     req.logIn(user, function(err) {
       if (err) {
@@ -40,6 +42,9 @@ function generalLogin(req, user, done) {
 
       // if there's anything specific about the session that needs to be stored
       req.session.startAt = new Date().getTime();
+      if (saveRedirectTo) {
+        req.session.redirectto = saveRedirectTo;
+      }
       done();
     });
   });
