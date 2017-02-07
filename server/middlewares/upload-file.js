@@ -31,7 +31,7 @@ module.exports = function(fields) {
     };
   }
 
-  const uploader = uploaderFactory(fields.map(function(item) {
+  const uploader = uploaderFactory.fields(fields.map(function(item) {
     return { name: item.field, maxCount: 1 };
   }));
 
