@@ -1,6 +1,7 @@
 // do the configuration bits that are static to all servers
 
 // get the requires out of the way
+const path = require('path');
 const nconf = require('nconf');
 const express = require('express');
 const compression = require('compression');

@@ -68,9 +68,17 @@ module.exports = function(fields) {
 
         const tmpFileName = req[fieldName][0].filename;
         const filename = fieldInfo.filename(req, tmpFileName);
+        const extension = fieldInfo.extension;
+
+        if (!req.uploads) {
+          req.uploads = {};
+        }
+        req.uploads[fieldName] = {};
 
         return Promise.all(fieldOutputs.map(function(key) {
-          return performActionsAndUpload(tmpFileName, filename, fieldInfo.extension, key, fieldInfo.out[key]);
+          const newFileName = key.length ? `${filename}_${key}.${extension}` : `${filename}.${extension}`;
+          req.uploads[fieldName][key] = newFileName;
+          return performActionsAndUpload(tmpFileName, newFileName, extension, fieldInfo.out[key]);
         }));
       }));
     }).then(function() {
@@ -112,8 +120,7 @@ module.exports = function(fields) {
   };
 };
 
-function performActionsAndUpload(tmpFilePath, filename, extension, nameToAppend, operations) {
-  const newFileName = nameToAppend.length ? `${filename}_${nameToAppend}.${extension}` : `${filename}.${extension}`;
+function performActionsAndUpload(tmpFilePath, newFileName, extension, operations) {
   const mimetype = mime.lookup(extension);
 
   return new Promise((resolve, reject) => {

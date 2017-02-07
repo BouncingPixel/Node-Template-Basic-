@@ -60,6 +60,11 @@ module.exports = function(fields) {
         const tmpFileName = req[fieldName][0].filename;
         const filename = fieldInfo.filename(req, tmpFileName);
 
+        if (!req.uploads) {
+          req.uploads = {};
+        }
+        req.uploads[fieldName] = filename;
+
         return performActionsAndUpload(tmpFileName, filename);
       }));
     }).then(function() {
