@@ -12,9 +12,11 @@ const fsunlink = bluebird.promisify(fs.unlink);
 const gm = require('gm');
 const imageMagick = gm.subClass({ imageMagick: true });
 
+const tmpPath = path.resolve(__dirname, '../../../tmp/');
+
 const uploadStorage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, path.resolve(__dirname, '../../../tmp/'));
+    cb(null, tmpPath);
   },
   filename: function(req, file, cb) {
     cb(null, file.originalname);
@@ -51,7 +53,7 @@ module.exports = function(fields) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
 
-      if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
           return Promise.reject(ServerErrors.BadRequest(`The file for ${fieldName} is missing`));
         }
@@ -64,12 +66,12 @@ module.exports = function(fields) {
         const fieldName = fieldInfo.field;
         const fieldOutputs = Object.keys(fieldInfo.out);
 
-        if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+        if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
           // just ignore it since it must be optional to get here
           return Promise.resolve();
         }
 
-        const tmpFileName = req[fieldName][0].filename;
+        const tmpFileName = req.files[fieldName][0].filename;
         const filename = fieldInfo.filename(req, tmpFileName);
         const extension = fieldInfo.extension;
 
@@ -95,14 +97,14 @@ module.exports = function(fields) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
 
-      if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
         // if there is no file to remove, then we don't try
         return Promise.resolve();
       }
 
-      const tmpFileName = req[fieldName][0].filename;
+      const tmpFileName = req.files[fieldName][0].filename;
 
-      return fsunlink(tmpFileName);
+      return fsunlink(path.resolve(tmpPath, tmpFileName));
     })).then(function() {
       next(err);
     }).catch(function(internalError) {
@@ -128,13 +130,13 @@ module.exports = function(fields) {
   };
 };
 
-function performActionsAndUpload(tmpFilePath, newFileName, extension, operations) {
+function performActionsAndUpload(tmpFileName, newFileName, extension, operations) {
   const mimetype = mime.lookup(extension);
 
   return new Promise((resolve, reject) => {
     const imgToStream = operations.reduce(function(img, operation) {
       return img[operation.fn].apply(img, operation.args);
-    }, imageMagick(tmpFilePath));
+    }, imageMagick(path.resolve(tmpPath, tmpFileName)));
 
     imgToStream.stream(extension, function(err, stdout, _stderr) {
       if (err) {

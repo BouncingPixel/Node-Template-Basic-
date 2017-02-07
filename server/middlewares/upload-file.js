@@ -9,9 +9,11 @@ const fs = require('fs');
 const path = require('path');
 const fsunlink = bluebird.promisify(fs.unlink);
 
+const tmpPath = path.resolve(__dirname, '../../../tmp/');
+
 const uploadStorage = multer.diskStorage({
   destination: function(req, file, cb) {
-    cb(null, path.resolve(__dirname, '../../../tmp/'));
+    cb(null, tmpPath);
   },
   filename: function(req, file, cb) {
     cb(null, file.originalname);
@@ -43,7 +45,7 @@ module.exports = function(fields) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
 
-      if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
           return Promise.reject(ServerErrors.BadRequest(`The file for ${fieldName} is missing`));
         }
@@ -54,12 +56,12 @@ module.exports = function(fields) {
       return Promise.all(fields.map(function(fieldInfo) {
         const fieldName = fieldInfo.field;
 
-        if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+        if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
           // just ignore it since it must be optional to get here
           return Promise.resolve();
         }
 
-        const tmpFileName = req[fieldName][0].filename;
+        const tmpFileName = req.files[fieldName][0].filename;
         const filename = fieldInfo.filename(req, tmpFileName);
 
         if (!req.uploads) {
@@ -80,14 +82,14 @@ module.exports = function(fields) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
 
-      if (!req[fieldName] || req[fieldName].length !== 1 || req[fieldName][0].size <= 0) {
+      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
         // if there is no file to remove, then we don't try
         return Promise.resolve();
       }
 
-      const tmpFileName = req[fieldName][0].filename;
+      const tmpFileName = req.files[fieldName][0].filename;
 
-      return fsunlink(tmpFileName);
+      return fsunlink(path.resolve(tmpPath, tmpFileName));
     })).then(function() {
       next(err);
     }).catch(function(internalError) {
@@ -113,13 +115,13 @@ module.exports = function(fields) {
   };
 };
 
-function performActionsAndUpload(tmpFilePath, filename) {
+function performActionsAndUpload(tmpFileName, filename) {
   const extension = path.parse(filename).ext;
   const mimetype = mime.lookup(extension);
 
   return RackspaceService.uploadStreamAsync({
     filename: filename,
     mimeType: mimetype,
-    stream: fs.createReadStream(tmpFilePath)
+    stream: fs.createReadStream(path.resolve(tmpPath, tmpFileName))
   });
 }
