@@ -3,6 +3,9 @@ module.exports = {
     "error",
     { "vars": "local", "args": "after-used", "argsIgnorePattern": "^_" }
   ],
+  "require-yield": [
+    "off"
+  ],
   "indent": [
     "error",
     2

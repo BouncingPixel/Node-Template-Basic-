@@ -46,7 +46,7 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
   if (req.xhr) {
     return res.send(logMessage);
   }
-  if (req.method === 'post') {
+  if (req.method.toLowerCase() === 'post') {
     req.flash('error', logMessage);
     let redirectTo = err.redirectTo || req.url;
     res.redirect(redirectTo);
