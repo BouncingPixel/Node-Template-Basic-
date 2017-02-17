@@ -313,6 +313,7 @@ router.post('/uploadImage', middlewares.UploadResizedImage([
   {
     field: 'image',
     isRequired: true,
+    maxFiles: 1, // the maximum number of files uploaded with this field. defaults to 1
     filename: (req, file) => {
       // return just the name portion of the filename of the file the user uploaded
       // alternatively, for random names that will not overlap:
@@ -337,6 +338,22 @@ router.post('/uploadImage', middlewares.UploadResizedImage([
 ]));
 ```
 
+After the images have been uploaded, all resulting filenames are stored in `req.uploads`.
+Each key in the `req.uploads` references the field names used. These point to an array of uploaded file names.
+An array is used at all times, even with maxFiles is 1, to maintain consistency.
+Each item in the array is an object where the keys match the keys in the `out` configuration and the values are
+the file names that are the result of uploading the file for that `out` configuration.
+These urls do not contain the URL portion for Rackspace. That will have to be added by the controller.
+The Rackspace portion is not included as some may wish to use a service such as Imgix or define the URL
+in the templates. In these cases, the database would not store the full URL, only the file name.
+For the above example, the file names could be retrieved by:
+
+```js
+const originalImage = req.uploads.image[0][''];
+const wallImage = req.uploads.image[0].wall;
+const tileImage = req.uploads.image[0].tile;
+```
+
 ### Using File Uploads
 
 File uploads are similar to the image uploads, but with a few differences.
@@ -349,6 +366,7 @@ router.post('/uploadFile', middlewares.UploadFile([
   {
     field: 'file',
     isRequired: true,
+    maxFiles: 1, // the maximum number of files uploaded with this field. defaults to 1
     filename: (req, file) => {
       // return the full tilename
       // alternatively, for random names that will not overlap:
@@ -359,6 +377,14 @@ router.post('/uploadFile', middlewares.UploadFile([
   },
   // can have multiple fields as well, but only 1 file uploaded per field
 ]));
+```
+
+Similar to the image upload, the file uploads will also be available on the `req.uploads` object.
+As there is no multiple derivatives for each file, the `req.uploads` is an object where they keys
+are the field names used and the values are an array of files uploaded for that field.
+
+```js
+const filename = req.uploads.file[0];
 ```
 
 ### Using Direct-to-Rackspace
@@ -657,10 +683,6 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
 
 - `mongoConnectStr`
   The full connection string to the mongo database including the host, port, replicaset, username, password, and database name.
-- `mailgunDomain`
-  The domain used in the mailgun configuration. If left unset, sending emails will simply return without sending and without errors.
-- `mailgunApiKey`
-  The API key for accessing mailgun. If left unset, sending emails will simply return without sending and without errors.
 - `siteDomain`
   The domain of the site, used in emails sent out, but can be used in other places with redirects.
 - `logLevel`
@@ -679,6 +701,11 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
   The page to redirect to when a 401 (not authenticated) occurs and the request was not JSON. Defaults to `/login`.
 
 Other configuration for optional modules:
+- email via Mailgun:
+  - `mailgunDomain`
+    The domain used in the mailgun configuration. If left unset, sending emails will simply return without sending and without errors.
+  - `mailgunApiKey`
+    The API key for accessing mailgun. If left unset, sending emails will simply return without sending and without errors.
 - noCaptcha:
   - `nocaptchaSecret`
     The secret, or API key, to use with nocaptcha validation. If not set, the captcha will be bypassed (always pass).
@@ -715,10 +742,12 @@ Heroku/Production (ENV variable) Only:
 
 These should not be set on the developer machine, only production.
 Developer machines may see the error:
+
 ```
 New Relic for Node.js halted startup due to an error:
 Error: Not starting without license key!
 ```
+
 This is expected as only the production code should contain the license key.
 Newrelic should not initialize causing this error message if the license key is not defined,
 but in the event a developer machine sees it, this is ok.

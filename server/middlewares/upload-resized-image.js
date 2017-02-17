@@ -44,7 +44,7 @@ module.exports = function(fields) {
   }
 
   const uploader = uploaderFactory.fields(fields.map(function(item) {
-    return { name: item.field, maxCount: 1 };
+    return { name: item.field, maxCount: item.maxFiles || 1 };
   }));
 
    // these are inside here, because we need the closure to contain fields
@@ -53,7 +53,7 @@ module.exports = function(fields) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
 
-      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
+      if (!req.files[fieldName] || req.files[fieldName].length === 0 || req.files[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
           return Promise.reject(ServerErrors.BadRequest(`The file for ${fieldName} is missing`));
         }
@@ -61,30 +61,54 @@ module.exports = function(fields) {
 
       return Promise.resolve();
     })).then(function() {
-      return Promise.all(fields.map(function(fieldInfo) {
-
+      // determine all the uploads and derivatives to make first, then use a mapSeries style to perform actions
+      const actionCalls = fields.reduce(function(proms, fieldInfo) {
         const fieldName = fieldInfo.field;
         const fieldOutputs = Object.keys(fieldInfo.out);
 
-        if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
+        if (!req.files[fieldName] || req.files[fieldName].length === 0) {
           // just ignore it since it must be optional to get here
-          return Promise.resolve();
+          return proms;
         }
-
-        const tmpFileName = req.files[fieldName][0].filename;
-        const filename = fieldInfo.filename(req, tmpFileName);
-        const extension = fieldInfo.extension;
 
         if (!req.uploads) {
           req.uploads = {};
         }
-        req.uploads[fieldName] = {};
+        req.uploads[fieldName] = [];
 
-        return Promise.all(fieldOutputs.map(function(key) {
-          const newFileName = key.length ? `${filename}_${key}.${extension}` : `${filename}.${extension}`;
-          req.uploads[fieldName][key] = newFileName;
-          return performActionsAndUpload(tmpFileName, newFileName, extension, fieldInfo.out[key]);
-        }));
+        req.files[fieldName].forEach(function(file, fileindex) {
+          if (file.size <= 0) {
+            return;
+          }
+
+          const tmpFileName = file.filename;
+          const filename = fieldInfo.filename(req, tmpFileName, fileindex);
+          const extension = fieldInfo.extension;
+
+          let uploads = {};
+          req.uploads[fieldName].push(uploads);
+
+          fieldOutputs.forEach(function(key) {
+            const newFileName = key.length ? `${filename}_${key}.${extension}` : `${filename}.${extension}`;
+            uploads[key] = newFileName;
+            proms.push([
+              tmpFileName,
+              newFileName,
+              extension,
+              fieldInfo.out[key]
+            ]);
+          });
+        });
+        return proms;
+      }, []);
+
+      // use a promise style mapSeries in order to prevent overwhelming Rackspace
+      let current = Promise.resolve();
+      return Promise.all(actionCalls.map(function(callargs) {
+        current = current.then(function() {
+          return performActionsAndUpload.apply(null, callargs);
+        });
+        return current;
       }));
     }).then(function() {
       cleanUpFiles(null, req, next);
@@ -94,17 +118,20 @@ module.exports = function(fields) {
   }
 
   function cleanUpFiles(err, req, next) {
-    Promise.all(fields.map(function(fieldInfo) {
-      const fieldName = fieldInfo.field;
+    // make sure we clean up *all* uploaded files, even from unknown fields just in case.
+    const fileProps = Object.keys(req.files);
 
-      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
-        // if there is no file to remove, then we don't try
+    return Promise.all(fileProps.map(function(fieldName) {
+      const files = req.files[fieldName];
+
+      if (!Array.isArray(files) || !files.length) {
         return Promise.resolve();
       }
 
-      const tmpFileName = req.files[fieldName][0].filename;
-
-      return fsunlink(path.resolve(tmpPath, tmpFileName));
+      return Promise.all(files.map(function(fileinfo) {
+        const tmpFileName = fileinfo.filename;
+        return fsunlink(path.resolve(tmpPath, tmpFileName));
+      }));
     })).then(function() {
       next(err);
     }).catch(function(internalError) {

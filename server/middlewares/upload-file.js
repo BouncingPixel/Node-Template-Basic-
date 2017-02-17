@@ -36,7 +36,7 @@ module.exports = function(fields) {
   }
 
   const uploader = uploaderFactory.fields(fields.map(function(item) {
-    return { name: item.field, maxCount: 1 };
+    return { name: item.field, maxCount: item.maxFiles || 1 };
   }));
 
    // these are inside here, because we need the closure to contain fields
@@ -45,7 +45,7 @@ module.exports = function(fields) {
     Promise.all(fields.map(function(fieldInfo) {
       const fieldName = fieldInfo.field;
 
-      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
+      if (!req.files[fieldName] || req.files[fieldName].length === 0 || req.files[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
           return Promise.reject(ServerErrors.BadRequest(`The file for ${fieldName} is missing`));
         }
@@ -56,20 +56,28 @@ module.exports = function(fields) {
       return Promise.all(fields.map(function(fieldInfo) {
         const fieldName = fieldInfo.field;
 
-        if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
+        if (!req.files[fieldName] || req.files[fieldName].length === 0) {
           // just ignore it since it must be optional to get here
           return Promise.resolve();
         }
 
-        const tmpFileName = req.files[fieldName][0].filename;
-        const filename = fieldInfo.filename(req, tmpFileName);
-
         if (!req.uploads) {
           req.uploads = {};
         }
-        req.uploads[fieldName] = filename;
+        req.uploads[fieldName] = [];
 
-        return performActionsAndUpload(tmpFileName, filename);
+        return Promise.all(req.files[fieldName].map(function(file, fileindex) {
+          if (file.size <= 0) {
+            return Promise.resolve();
+          }
+
+          const tmpFileName = file.filename;
+          const filename = fieldInfo.filename(req, tmpFileName, fileindex);
+
+          req.uploads[fieldName].push(filename);
+
+          return performActionsAndUpload(tmpFileName, filename);
+        }));
       }));
     }).then(function() {
       cleanUpFiles(null, req, next);
@@ -79,17 +87,20 @@ module.exports = function(fields) {
   }
 
   function cleanUpFiles(err, req, next) {
-    Promise.all(fields.map(function(fieldInfo) {
-      const fieldName = fieldInfo.field;
+    // make sure we clean up *all* uploaded files, even from unknown fields just in case.
+    const fileProps = Object.keys(req.files);
 
-      if (!req.files[fieldName] || req.files[fieldName].length !== 1 || req.files[fieldName][0].size <= 0) {
-        // if there is no file to remove, then we don't try
+    return Promise.all(fileProps.map(function(fieldName) {
+      const files = req.files[fieldName];
+
+      if (!Array.isArray(files) || !files.length) {
         return Promise.resolve();
       }
 
-      const tmpFileName = req.files[fieldName][0].filename;
-
-      return fsunlink(path.resolve(tmpPath, tmpFileName));
+      return Promise.all(files.map(function(fileinfo) {
+        const tmpFileName = fileinfo.filename;
+        return fsunlink(path.resolve(tmpPath, tmpFileName));
+      }));
     })).then(function() {
       next(err);
     }).catch(function(internalError) {
