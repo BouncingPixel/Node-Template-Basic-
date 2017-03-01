@@ -48,12 +48,10 @@ function addRoutesInDir(baseDir, dir, router) {
         return;
       }
 
-      // if it is index, then convert that to /
-      if (dir.lastIndexOf('/index.dust') === (dir.length - 11)) {
-        dir = dir.substr(0, dir.length - 10);
-      }
+      const isIndex = dir.lastIndexOf('/index.dust') === (dir.length - 11);
+      const url = isIndex ? dir.substr(0, dir.length - 11) : dir.substr(0, dir.length - 5);
 
-      router.get(dir, renderPage(path.join('static', dir)));
+      router.get(url, renderPage(path.join('static', url)));
     }
   });
 }
@@ -62,8 +60,8 @@ function addRoutesInDir(baseDir, dir, router) {
 function createStaticHandler() {
   return function(req, res, next) {
     // also, make sure if it ends in a slash, then use index.dust
-    const urlpath = 'static/' + req.path.substr(1) + (req.path[req.path.length - 1] === '/' ? 'index' : '');
-    const pagePath = path.resolve(baseViewsDir, urlpath + '.dust');
+    const hasEndingSlash = req.path[req.path.length - 1] === '/';
+    const urlpath = 'static/' + req.path.substr(1) + (hasEndingSlash ? 'index' : '');
 
     // security: make sure someone doesnt navigate out of the top folder with urlpath
     if (urlpath.indexOf('/./') !== -1 || urlpath.indexOf('/../') !== -1) {
@@ -71,19 +69,40 @@ function createStaticHandler() {
       return;
     }
 
+    const fallback = hasEndingSlash ? null : (urlpath + '/index');
+
     // check if dust file exists
-    fs.access(pagePath, fs.constants.R_OK, (err) => {
-      // if not, then next();
-      if (err) {
-        // don't actually show the error, just let the 404 take over
+    attemptRender(urlpath, fallback, function(err, toRender) {
+      if (err || !toRender) {
         next();
         return;
       }
 
-      // if it does, render it
       res.render(urlpath);
     });
   };
+}
+
+function attemptRender(urlpath, fallback, done) {
+  const pagePath = path.resolve(baseViewsDir, urlpath + '.dust');
+
+  // check if dust file exists
+  fs.access(pagePath, fs.constants.R_OK, (err) => {
+    // if not, then next();
+    if (err) {
+      if (fallback) {
+        attemptRender(fallback, null, done);
+        return;
+      }
+
+      // don't actually show the error, just let the 404 take over
+      done(err);
+      return;
+    }
+
+    // if it does, render it
+    done(null, urlpath);
+  });
 }
 
 module.exports = process.env.NODE_ENV === 'production' ? createAllStaticRoutes : createStaticHandler;
