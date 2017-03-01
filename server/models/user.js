@@ -1,75 +1,9 @@
 'use strict';
 
-// order matters, so superadmin has all admin rights
-const UserRoles = [
-  'banned',
-  'inmoderation',
-  'user',
-  'moderator',
-  'admin',
-  'superadmin'
-];
-const defaultUserRole = 'user';
-
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-const UserSchema = mongoose.Schema({
-  email: {
-    type: String,
-    unique: true,
-    required: true
-  },
-
-  name: {
-    type: String,
-    required: true
-  },
-
-  role: {
-    type: String,
-    enum: UserRoles,
-    default: defaultUserRole,
-  },
-
-  password: {
-    type: String,
-    required: true,
-    minlength: [6, 'Passwords must be at least 6 characters']
-  },
-
-  logintoken: {
-    type: String
-  },
-  tokenexpire: {
-    type: Date
-  },
-
-  // uncomment if using single signon from these providers
-  // facebookId: {
-  //   type: String
-  // },
-  // googleId: {
-  //   type: String
-  // },
-  // twitterId: {
-  //   type: String
-  // },
-  // linkedinId: {
-  //   type: String
-  // },
-  // Add more to the user
-
-}, {
-  toObject: {
-    virtuals: true
-  },
-  toJSON: {
-    virtuals: true
-  },
-  timestamps: true
-});
-
+const UserSchema = require('../../schemas/user');
 
 // pre-hook makes sure the user's password is always hashed
 UserSchema.pre('save', function(next) {
@@ -96,6 +30,8 @@ UserSchema.pre('save', function(next) {
 });
 
 UserSchema.methods.isRoleAtLeast = function(minimumRole) {
+  const UserRoles = this.model('user').schema.path('role').enumValues;
+
   const userRoleIndex = UserRoles.indexOf(this.role);
   const desiredRoleIndex = UserRoles.indexOf(minimumRole);
 

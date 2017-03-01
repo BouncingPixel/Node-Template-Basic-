@@ -10,13 +10,18 @@ module.exports = {
     path: path.join(__dirname, 'public', 'js'),
     filename: '[name].js'
   },
+  resolve: {
+    aliasFields: ['browser']
+  },
   externals: {
-    "jquery": "jQuery",
-    "swal": "swal",
-    "moment": "moment",
-    "pluralize": "pluralize",
-    "page": "page",
-    "axios": "axios"
+    'jquery': 'jQuery',
+    'swal': 'swal',
+    'moment': 'moment',
+    'mongoose': 'mongoose',
+    'pluralize': 'pluralize',
+    'axios': 'axios',
+    'slidebars': 'slidebars',
+    'mongoose/lib/browserDocument': 'mongoose.Document'
   },
   module: {
     loaders: [

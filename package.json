@@ -8,7 +8,7 @@
     "start": "node app.js",
     "build": "webpack --config webpack.config.js",
     "build-prod": "webpack -p --config webpack.config.js",
-    "lint": "eslint server/** app.js express-server.js dust-helpers.js && eslint -c .eslintrc-browser.js client/**"
+    "lint": "eslint server/** app.js express-server.js libs/** forms/** dust-helpers.js && eslint -c .eslintrc-browser.js client/**"
   },
   "repository": {
     "type": "git",

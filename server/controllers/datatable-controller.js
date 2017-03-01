@@ -13,7 +13,7 @@ module.exports = {
 
       const query = req.query.columns.reduce((q, col) => {
         if (col.search.value && col.search.value.length) {
-          q[col.data] = col.search.value;
+          q[col.data] = new RegExp(col.search.value, 'i');
         }
         return q;
       }, {});

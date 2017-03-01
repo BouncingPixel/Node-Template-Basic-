@@ -3,29 +3,8 @@
 const crypto = require('crypto');
 
 const mongoose = require('mongoose');
-const Types = mongoose.Schema.Types;
 
-const RememberTokenSchema = mongoose.Schema({
-  token: {
-    type: String,
-    required: true
-  },
-
-  user: {
-    type: Types.ObjectId,
-    ref: 'user',
-    required: true
-  }
-
-}, {
-  toObject: {
-    virtuals: true
-  },
-  toJSON: {
-    virtuals: true
-  },
-  timestamps: true
-});
+const RememberTokenSchema = require('../../schemas/remember-token');
 
 RememberTokenSchema.statics.generate = function generate(userId, done) {
   const _self = this;

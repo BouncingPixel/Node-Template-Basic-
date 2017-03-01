@@ -38,7 +38,6 @@ cons.dust.render('notatemplate', {
   ext: app.get('view engine'),
   views: path.resolve(__dirname, app.get('views'))
 }, function() { /* we don't care about the return, it's an error anyway. but Dust is ready now */ });
-// require in our custom helpers, and pass in dust to attach the filters/helpers to
 require('./dust-helpers')(cons.requires.dust);
 
 // don't expose we use Express. need to know basis

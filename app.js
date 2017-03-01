@@ -29,6 +29,7 @@ nconf.argv()
     requireHTTPS: false,
     logLevel: 'debug',
     redirectOn401: '/login',
+    sessionSecret: 'iamakeyboardcatbutnotreally',
 
     maxFailTries: 3, // after this many tries, start locks
     maxLockTime: 1 * 3600 * 1000, // maximum amount of a time an account may be locked for
