@@ -70,64 +70,61 @@ const PassportService = {
     passReqToCallback: true
   },
   function(req, email, password, done) {
-    const lowerEmail = email.toLowerCase();
+    bluebird.coroutine(function*() {
+      const lowerEmail = email.toLowerCase();
 
-    const userPromise = User.findOne({
-      email: lowerEmail,
-      role: {$ne: 'noaccess'},
-      deactivatedat: null
-    });
+      let [user, lockInfo] = yield Promise.all([
+        User.findOne({
+          email: lowerEmail,
+          role: {$ne: 'noaccess'},
+          deactivatedat: null
+        }),
 
-    const lockerPromise = LoginLocker.findOne({email: lowerEmail});
+        LoginLocker.findOne({email: lowerEmail})
+      ]);
 
-    bluebird.all([
-      userPromise,
-      lockerPromise
-    ]).spread(function(user, lockInfo) {
       if (lockInfo && lockInfo.lockedUntil && new Date() <= lockInfo.lockedUntil) {
         // do absolutely nothing if locked
-        return done(null, false);
+        return false;
       }
 
       // TODO: add audit log
 
       const checkPassword = user ? user.password : 'THISISNOTVALIDPASSWORD';
-      return bcrypt.compare(password, checkPassword).then(function(isValid) {
-        if (isValid) {
-          if (lockInfo) {
-            lockInfo.failedCount = 0;
-            return lockInfo.save().then(function() {
-              return user;
-            });
-          } else {
-            return user;
-          }
-        } else {
-          if (!lockInfo) {
-            lockInfo = new LoginLocker();
-          }
-          // TODO: can we make this atomic?
-          lockInfo.failedCount += 1;
+      const isValid = yield bcrypt.compare(password, checkPassword);
 
-          const maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
-          const maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
-          if (lockInfo.failedCount > maxFailTries) {
-            lockInfo.lockedUntil = Math.min(
-              maxLockTime,
-              Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
-            );
-          }
-
-          return lockInfo.save().then(function() {
-            // weird, but we need to return a boolean if they successfully logged in
-            // not the user itself
-            return false;
-          });
+      if (isValid) {
+        if (lockInfo) {
+          lockInfo.failedCount = 0;
+          yield lockInfo.save();
         }
-      });
-    }).then(function(toReturn) {
+
+        return user;
+      } else {
+        if (!lockInfo) {
+          lockInfo = new LoginLocker();
+        }
+        // TODO: can we make this atomic?
+        lockInfo.failedCount += 1;
+
+        const maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
+        const maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
+        if (lockInfo.failedCount > maxFailTries) {
+          lockInfo.lockedUntil = Math.min(
+            maxLockTime,
+            Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
+          );
+        }
+
+        yield lockInfo.save();
+        return false;
+      }
+    })().then(function(toReturn) {
       done(null, toReturn);
-    }).catch(done);
+      return null;
+    }).catch(function(err) {
+      done(err);
+    });
   }),
 
   passwordlessStrategy: new LocalStrategy({
@@ -136,43 +133,41 @@ const PassportService = {
     passReqToCallback: true
   },
   function(req, email, token, done) {
-    const lowerEmail = email.toLowerCase();
+    bluebird.coroutine(function*() {
+      const lowerEmail = email.toLowerCase();
 
-    const userPromise = User.findOne({
-      email: lowerEmail,
-      role: {$ne: 'noaccess'},
-      deactivatedat: null,
-      tokenexpire: {$gte: new Date()}
-    });
+      let [user, lockInfo] = yield Promise.all([
+        User.findOne({
+          email: lowerEmail,
+          role: {$ne: 'noaccess'},
+          deactivatedat: null,
+          tokenexpire: {$gte: new Date()}
+        }),
 
-    const lockerPromise = LoginLocker.findOne({email: lowerEmail});
+        LoginLocker.findOne({email: lowerEmail})
+      ]);
 
-    bluebird.all([
-      userPromise,
-      lockerPromise
-    ]).spread(function(user, lockInfo) {
       if (lockInfo && lockInfo.lockedUntil && new Date() <= lockInfo.lockedUntil) {
         // do absolutely nothing if locked
-        return done(null, false);
+        return false;
       }
 
       const checkToken = user ? user.logintoken : 'THISISNOTVALIDPASSWORD';
-      return bcrypt.compare(token, checkToken).then(function(isValid) {
-        // we don't mess with the lock out with tokens, but we could
-        if (!isValid) {
-          return false;
-        }
+      const isValid = yield bcrypt.compare(token, checkToken);
 
-        user.logintoken = null;
-        user.tokenexpire = null;
-        return user.save().then(function() {
-          // weird, but we need to return a boolean if they successfully logged in
-          // not the user itself
-          return true;
-        });
-      });
-    }).then(function(toReturn) {
+      // we don't mess with the lock out with tokens, but we could
+      if (!isValid) {
+        return false;
+      }
+
+      user.logintoken = null;
+      user.tokenexpire = null;
+      yield user.save();
+
+      return user;
+    })().then(function(toReturn) {
       done(null, toReturn);
+      return null;
     }).catch(done);
   }),
 
