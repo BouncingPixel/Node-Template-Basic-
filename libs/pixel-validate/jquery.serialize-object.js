@@ -89,6 +89,8 @@
         default:
           if (element.data('isArray')) {
             return pair.value.length ? pair.value.split(',') : [];
+          } else if (element.data('emptyAsNull')) {
+            return pair.value.length ? pair.value : null;
           }
 
           return pair.value;

@@ -95,6 +95,12 @@ app.use(function(req, res, next) {
     res.locals.loggedInUser = req.user;
   }
 
+  res.locals.ENV = nconf.get('client');
+
+  if (process.env.NODE_ENV === 'production') {
+    res.locals.NODE_ENV_PRODUCTION = true;
+  }
+
   // the flash vars too for display
   if (req.method !== 'POST') {
     res.locals.flashError = req.flash('error');

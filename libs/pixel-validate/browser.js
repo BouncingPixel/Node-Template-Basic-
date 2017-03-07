@@ -8,13 +8,20 @@
 // they can pre-catch things and ignore if desired
 
 const $ = require('jquery');
-require('./jquery.serialize-object');
+require('./jquery.serialize-object.js');
 
-const validate = require('./validate');
+const mongoose = require('mongoose');
+const mongooseDocument = mongoose.Document;
+
+// mongooseDocument.emit = function() {};
+
+const validateFactories = require('./validate.js');
+const validateAll = validateFactories.validateAllFactory(mongooseDocument);
+const validateField = validateFactories.validateFieldFactory(mongooseDocument);
 
 module.exports = {
-  validate: validate.validateAll,
-  validateField: validate.validateField
+  validate: validateAll,
+  validateField: validateField
 };
 
 $.fn.pixelValidate = function(Schema, _options) {
@@ -29,14 +36,15 @@ $.fn.pixelValidate = function(Schema, _options) {
       const htmlPath = field.attr('name');
       const dotPath = htmlPathToDotPath(htmlPath);
 
-      validate.validateField(allData, dotPath, Schema).then(function() {
-        $(field).removeClass('invalid').addClass('valid');
+      validateField(allData, dotPath, Schema).then(function() {
+        field.removeClass('invalid').addClass('valid');
       }).catch(function(errorInfo) {
         const message = errorInfo.message;
 
         field.addClass('invalid').removeClass('valid');
         field.next('.error-message').text(message);
-        $(`[data-error-for="${htmlPath}"]`).text(message);
+        field.siblings('label').attr('data-error', message);
+        $(`[data-error-for="${htmlPath}"]`, form).text(message);
       });
     });
 
@@ -51,7 +59,7 @@ $.fn.pixelValidate = function(Schema, _options) {
 
       const data = form.serializeObject();
 
-      validate.validateAll(data, Schema).then(function() {
+      validateAll(data, Schema).then(function() {
         // hide any errors there were there originally
         $('.invalid', form).removeClass('invalid').addClass('valid');
         button.trigger('click', ['ignore-validation']);
@@ -66,12 +74,13 @@ $.fn.pixelValidate = function(Schema, _options) {
           const keypath = dotPathToHtmlPath(prop);
 
           const message = errorInfo.message;
-          const field = $(`[name="${keypath}"]`);
+          const field = $(`[name="${keypath}"]`, form);
 
           field.addClass('invalid').removeClass('valid');
           field.next('.error-message').text(message);
+          field.siblings('label').attr('data-error', message);
           // allow for people to use a data-error-for to relocate errors
-          $(`[data-error-for="${keypath}"]`).text(message);
+          $(`[data-error-for="${keypath}"]`, form).text(message);
         });
 
         // focus and scroll to the issue

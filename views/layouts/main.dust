@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>{+doc_title}Default Title{/doc_title}</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="keywords" content="{+doc_keywords}{/doc_keywords}">
+    <meta name="description" content="{+doc_description}{/doc_description}">
+
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,300,400,500,600,700|Roboto:300italic,400italic,300,400,500,700,900' rel='stylesheet' type='text/css'>
+    <link type="text/css" rel="stylesheet" href="//cdn.jsdelivr.net/sweetalert2/4.0.6/sweetalert2.css" />
+    <link rel="stylesheet" href="/css/slidebars.css" type="text/css">
+    <link rel="stylesheet" href="/css/jquery-ui.css">
+    <link type="text/css" rel="stylesheet" href="/css/style.css" />
+
+  </head>
+  <body>
+
+    {+main_content}{/main_content}
+
+  </body>
+
+<script src="//cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.js"></script>
+
+<script src="/node_modules/systemjs/dist/system.js"></script>
+<script src="/client/config.js"></script>
+{?NODE_ENV_PRODUCTION}
+  <script src="/js/main.js"></script>
+{/NODE_ENV_PRODUCTION}
+<script>
+  SystemJS.import('client/main.js');
+</script>
+
+</html>

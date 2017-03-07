@@ -4,6 +4,10 @@ module.exports = {
     "es6": true,
     "browser": true
   },
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
   "globals": {
     "ServerErrors": true
   },
