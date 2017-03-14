@@ -46,7 +46,7 @@ SystemJS.config({
 
     'jquery-ui': './public/libs/jquery-ui.js',
     'materialize': './public/libs/materialize.min.js',
-    'mongoose': './public/libs/mongoose.js',
+    'mongoose': './libs/pixel-validate/mongoose.js',
     'slidebars': './public/libs/slidebars.min.js',
 
     'axios': './node_modules/axios/dist/axios.min.js',

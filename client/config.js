@@ -1,4 +1,4 @@
-/* global SystemJS */
+/* global SystemJS mongoose */
 SystemJS.config({
   baseURL: '/',
 
@@ -44,7 +44,6 @@ SystemJS.config({
 
     'jquery-ui': '/libs/jquery-ui.js',
     'materialize': '/libs/materialize.min.js',
-    'mongoose': '/libs/mongoose.js',
     'slidebars': '/libs/slidebars.min.js',
 
     'axios': '/node_modules/axios/dist/axios.min.js',
@@ -57,11 +56,6 @@ SystemJS.config({
   meta: {
     '/client/*': {
       loader: 'plugin-babel'
-    },
-    'mongoose': {
-      format: 'global',
-      exports: 'mongoose',
-      deps: []
     },
     'hammerjs': {
       format: 'global',
@@ -78,5 +72,9 @@ SystemJS.config({
       format: 'global',
       deps: ['jquery', 'hammerjs']
     }
-  }
+  },
+
+  transpiler: 'plugin-babel'
 });
+
+System.set('mongoose', System.newModule(mongoose));

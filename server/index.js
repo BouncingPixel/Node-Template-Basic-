@@ -151,9 +151,18 @@ app.use(function(req, res, next) {
 app.use(function(req, res, next) {
   res.header('X-XSS-Protection', '1; mode=block');
   res.header('X-FRAME-OPTIONS', 'SAMEORIGIN');
-  if (req.method.toLowerCase() !== 'post') {
-    res.locals._csrf = req.csrfToken();
-  }
+
+  // originally, this was non-POST only, because of issues with POST+render
+  // the smallest use-case seemed to work. so instead, using a lazy fetch for the CSRF
+  // DustJS will call the function if it needs the value, otherwise, the CSRF isn't generated
+  let csrfToken = null;
+  res.locals._csrf = function() {
+    if (!csrfToken) {
+      csrfToken = req.csrfToken();
+    }
+    return csrfToken;
+  };
+
   next();
 });
 

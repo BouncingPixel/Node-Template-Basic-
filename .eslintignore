@@ -1,3 +1,5 @@
 node_modules
 bower_components
 libs/pixel-validate/jquery.serialize-object.js
+libs/pixel-validate/mongoose.js
+libs/system.js
