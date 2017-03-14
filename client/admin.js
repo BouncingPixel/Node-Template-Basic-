@@ -1,7 +1,32 @@
-const $ = require('jquery');
-const dust = require('dustjs-linkedin');
-require('../dust-helpers')(dust);
-require('../libs/pixel-validate/browser');
+import $ from 'jquery';
+
+import 'jquery-ui';
+import 'trumbowyg';
+import 'materialize';
+import 'datatables';
+
+import '../libs/pixel-validate/browser.js';
+
+import dust from 'dustjs-linkedin';
+import dustHelperLoader from '../libs/dust-helpers';
+dustHelperLoader(dust);
+
+$('.button-collapse').sideNav({'edge': 'left'});
+$('select').not('.disabled').material_select();
+
+$.trumbowyg.svgPath = '/images/trumbowyg-icons.svg';
+
+$('.wyssimpleeditor').trumbowyg({
+  btns: [['bold', 'italic', 'underline'], ['link'], ['unorderedList', 'orderedList'], ['superscript', 'subscript'], ['horizontalRule']],
+  removeformatPasted: true,
+  resetCss: true
+});
+
+$('.datepicker').pickadate({
+  selectMonths: true,
+  selectYears: 5,
+  format: 'mm/dd/yyyy'
+});
 
 /*
 // example using dust:
@@ -18,14 +43,3 @@ const myDustFile = require('../../views/some-dust-file.dust');
 // example form validation:
 const UserSchema = require('../schemas/user');
 $('#usereditform').pixelValidate(UserSchema);
-
-$('.button-collapse').sideNav({'edge': 'left'});
-$('select').not('.disabled').material_select();
-
-$.trumbowyg.svgPath = '/images/trumbowyg-icons.svg';
-
-$('.wyssimpleeditor').trumbowyg({
-  btns: [['bold', 'italic', 'underline', 'strikethrough'], ['link'], ['unorderedList', 'orderedList']],
-  removeformatPasted: true,
-  resetCss: true
-});

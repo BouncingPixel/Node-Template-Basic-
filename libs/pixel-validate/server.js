@@ -1,13 +1,18 @@
-const pixelValidate = require('./validate');
+const mongooseDocument = require('mongoose/lib/browserDocument');
+mongooseDocument.emit = function() {};
 
-exports.validate = pixelValidate.validateAll;
-exports.validateField = pixelValidate.validateField;
+const validateFactories = require('./validate');
+const validateAll = validateFactories.validateAllFactory(mongooseDocument);
+const validateField = validateFactories.validateFieldFactory(mongooseDocument);
+
+exports.validate = validateAll;
+exports.validateField = validateField;
 
 exports.ValidateMiddlware = function(Schema, redirectto) {
   return function(req, res, next) {
     const data = req.body;
 
-    pixelValidate.validateAll(data, Schema).then(function() {
+    validateAll(data, Schema).then(function() {
       next();
     }).catch(function(err) {
       if (!err.errors) {

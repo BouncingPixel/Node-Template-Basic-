@@ -95,6 +95,12 @@ app.use(function(req, res, next) {
     res.locals.loggedInUser = req.user;
   }
 
+  res.locals.ENV = nconf.get('client');
+
+  if (process.env.NODE_ENV === 'production') {
+    res.locals.NODE_ENV_PRODUCTION = true;
+  }
+
   // the flash vars too for display
   if (req.method !== 'POST') {
     res.locals.flashError = req.flash('error');
@@ -145,9 +151,18 @@ app.use(function(req, res, next) {
 app.use(function(req, res, next) {
   res.header('X-XSS-Protection', '1; mode=block');
   res.header('X-FRAME-OPTIONS', 'SAMEORIGIN');
-  if (req.method.toLowerCase() !== 'post') {
-    res.locals._csrf = req.csrfToken();
-  }
+
+  // originally, this was non-POST only, because of issues with POST+render
+  // the smallest use-case seemed to work. so instead, using a lazy fetch for the CSRF
+  // DustJS will call the function if it needs the value, otherwise, the CSRF isn't generated
+  let csrfToken = null;
+  res.locals._csrf = function() {
+    if (!csrfToken) {
+      csrfToken = req.csrfToken();
+    }
+    return csrfToken;
+  };
+
   next();
 });
 

@@ -7,10 +7,12 @@
 
     <!--Import Google Icon Font-->
     <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,300,400,500,600,700|Roboto:300italic,400italic,300,400,500,700,900' rel='stylesheet' type='text/css'>
     <!--Import materialize.css-->
     <link type="text/css" rel="stylesheet" href="/css/materialize.css" />
     <link type="text/css" rel="stylesheet" href="//cdn.jsdelivr.net/sweetalert2/4.0.6/sweetalert2.css" />
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.4.2/ui/trumbowyg.css" />
+    <link type="text/css" rel="stylesheet" href="//cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css" />
     <link type="text/css" rel="stylesheet" href="/css/admin.css" />
 
     <!--Let browser know website is optimized for mobile-->
@@ -20,7 +22,7 @@
   <body>
 
     <header>
-      <nav class="top-nav">
+      <nav class="top-nav blue">
         <div class="container">
           <div class="nav-wrapper"><a class="page-title">{+page_title}{/page_title}</a></div>
         </div>
@@ -122,7 +124,7 @@
       {+main_content}{/main_content}
     </main>
 
-    <footer class="page-footer">
+    <footer class="page-footer blue">
       <div class="container">
         <div class="row">
           <div class="col l12 s12">
@@ -137,18 +139,17 @@
       </div>
     </footer>
 
-    <script src="//cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="//cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.js"></script>
 
-    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
-    <script type="text/javascript" src="/libs/materialize.min.js"></script>
-    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.4.2/trumbowyg.min.js"></script>
+<script src="/node_modules/systemjs/dist/system.js"></script>
+<script src="/client/config.js"></script>
+{?NODE_ENV_PRODUCTION}
+  <script src="/js/admin.js"></script>
+{/NODE_ENV_PRODUCTION}
+<script>
+  SystemJS.import('client/admin.js');
+</script>
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.17.1/moment.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/pluralize/3.1.0/pluralize.min.js"></script>
-    <script src="//cdn.jsdelivr.net/sweetalert2/4.0.6/sweetalert2.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/axios/0.12.0/axios.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/slidebars/2.0.2/slidebars.min.js"></script>
-
-    <script type="text/javascript" src="/js/admin.js"></script>
   </body>
 </html>

@@ -8,13 +8,17 @@
 // they can pre-catch things and ignore if desired
 
 const $ = require('jquery');
-require('./jquery.serialize-object');
+require('./jquery.serialize-object.js');
 
-const validate = require('./validate');
+const mongooseDocument = require('mongoose').Document;
+
+const validateFactories = require('./validate.js');
+const validateAll = validateFactories.validateAllFactory(mongooseDocument);
+const validateField = validateFactories.validateFieldFactory(mongooseDocument);
 
 module.exports = {
-  validate: validate.validateAll,
-  validateField: validate.validateField
+  validate: validateAll,
+  validateField: validateField
 };
 
 $.fn.pixelValidate = function(Schema, _options) {
@@ -29,14 +33,24 @@ $.fn.pixelValidate = function(Schema, _options) {
       const htmlPath = field.attr('name');
       const dotPath = htmlPathToDotPath(htmlPath);
 
-      validate.validateField(allData, dotPath, Schema).then(function() {
-        $(field).removeClass('invalid').addClass('valid');
+      validateField(allData, dotPath, Schema).then(function() {
+        field.removeClass('invalid').addClass('valid');
       }).catch(function(errorInfo) {
         const message = errorInfo.message;
 
+        const skipValidation = field.data('skipValidation');
+        const ignoreEmpty = field.data('ignoreEmpty');
+
+        if (skipValidation) {
+          return;
+        }
+
+        if (field.val() === '' && ignoreEmpty) {
+          return;
+        }
+
         field.addClass('invalid').removeClass('valid');
-        field.next('.error-message').text(message);
-        $(`[data-error-for="${htmlPath}"]`).text(message);
+        field.siblings('label').attr('data-error', message);
       });
     });
 
@@ -51,38 +65,60 @@ $.fn.pixelValidate = function(Schema, _options) {
 
       const data = form.serializeObject();
 
-      validate.validateAll(data, Schema).then(function() {
-        // hide any errors there were there originally
+      function handleFormResult(error) {
+        const validationErrors = error && error.errors;
+
+        if (error && !validationErrors) {
+          // then show a global error message for the form
+          return;
+        }
+
         $('.invalid', form).removeClass('invalid').addClass('valid');
-        button.trigger('click', ['ignore-validation']);
-      }).catch(function(err) {
-        const errors = err.errors;
-        // some errors may have been set before and no longer need to be, unset those ones
-        $('.invalid', form).removeClass('invalid').addClass('valid');
 
-        Object.keys(err.errors).forEach((prop) => {
-          const errorInfo = errors[prop];
+        let isValid = true;
+        if (validationErrors) {
+          isValid = Object.keys(validationErrors).filter((prop) => {
+            const errorInfo = validationErrors[prop];
 
-          const keypath = dotPathToHtmlPath(prop);
+            const keypath = dotPathToHtmlPath(prop);
 
-          const message = errorInfo.message;
-          const field = $(`[name="${keypath}"]`);
+            const message = errorInfo.message;
+            const field = $(`[name="${keypath}"]`, form);
 
-          field.addClass('invalid').removeClass('valid');
-          field.next('.error-message').text(message);
-          // allow for people to use a data-error-for to relocate errors
-          $(`[data-error-for="${keypath}"]`).text(message);
-        });
+            const skipValidation = field.data('skipValidation');
+            const ignoreEmpty = field.data('ignoreEmpty');
 
-        // focus and scroll to the issue
-        const firstElement = $($('.invalid', form)[0]);
-        firstElement.focus();
+            if (skipValidation) {
+              return false;
+            }
 
-        const halfHeight = $(window).height() / 2;
+            if (field.val() === '' && ignoreEmpty) {
+              return false;
+            }
 
-        const elementTop = firstElement.offset().top - halfHeight;
-        $('html, body').animate({ scrollTop: elementTop }, 500);
-      });
+            field.addClass('invalid').removeClass('valid');
+            field.siblings('label').attr('data-error', message);
+            return true;
+          }).length === 0;
+        }
+
+        if (isValid) {
+          // use button trigger to make sure to reclick the button the user did
+          // important, because some buttons have [name="..."] and we want that to send
+          button.trigger('click', ['ignore-validation']);
+        } else {
+          // focus and scroll to the issue
+          const firstElement = $($('.invalid', form)[0]);
+          firstElement.focus();
+
+          // const halfHeight = $(window).height() / 2;
+
+          // const elementTop = firstElement.offset().top - halfHeight;
+          // $('html, body').animate({ scrollTop: elementTop }, 500);
+        }
+      }
+
+      validateAll(data, Schema).then(handleFormResult).catch(handleFormResult);
     });
 
   });
