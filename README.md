@@ -313,6 +313,7 @@ router.post('/uploadImage', middlewares.UploadResizedImage([
   {
     field: 'image',
     isRequired: true,
+    maxSize: 10485760, // optional maximum file size, this is 10MB. defaults to allow all sizes
     maxFiles: 1, // the maximum number of files uploaded with this field. defaults to 1
     filename: (req, file) => {
       // return just the name portion of the filename of the file the user uploaded
@@ -366,6 +367,7 @@ router.post('/uploadFile', middlewares.UploadFile([
   {
     field: 'file',
     isRequired: true,
+    maxSize: 10485760, // optional maximum file size, this is 10MB. defaults to allow all sizes
     maxFiles: 1, // the maximum number of files uploaded with this field. defaults to 1
     filename: (req, file) => {
       // return the full tilename

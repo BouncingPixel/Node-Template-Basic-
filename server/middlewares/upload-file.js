@@ -51,6 +51,14 @@ module.exports = function(fields) {
         }
       }
 
+      if (fieldInfo.maxSize && req.files[fieldName] && req.files[fieldName].length) {
+        const tooLarge = req.files[fieldName].filter(f => f.size > fieldInfo.maxSize);
+        if (tooLarge.length) {
+          const files = tooLarge.map(f => f.filename).join(', ');
+          return Promise.reject(ServerErrors.BadRequest(`The files ${files} are too large`));
+        }
+      }
+
       return Promise.resolve();
     })).then(function() {
       return Promise.all(fields.map(function(fieldInfo) {

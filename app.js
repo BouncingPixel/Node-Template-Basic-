@@ -60,7 +60,7 @@ Promise
 
     potentialModels.map((modelFile) => {
       return require('./server/models/' + modelFile);
-    }).filter((Model) => Model.findInAlgolia != null);
+    });
   })
   .then(() => {
     // load up the server

@@ -29,6 +29,7 @@ const RackspaceService = require('../services/rackspace-service');
 // fields: an array of objects containing:
 //    field: the name of the POST field with the file
 //    isRequired: boolean to denote if the file is required (true) or optional (false)
+//    maxSize: optional int to denote the maximum file size in bytes that is allowed.
 //    filename: the name of the file to use
 //              receives 2 parameters: req and the uploaded filename. returns filename excluding extension
 //    extention: the desired final extension to use (will convert from any to desired)
@@ -56,6 +57,14 @@ module.exports = function(fields) {
       if (!req.files[fieldName] || req.files[fieldName].length === 0 || req.files[fieldName][0].size <= 0) {
         if (fieldInfo.isRequired) {
           return Promise.reject(ServerErrors.BadRequest(`The file for ${fieldName} is missing`));
+        }
+      }
+
+      if (fieldInfo.maxSize && req.files[fieldName] && req.files[fieldName].length) {
+        const tooLarge = req.files[fieldName].filter(f => f.size > fieldInfo.maxSize);
+        if (tooLarge.length) {
+          const files = tooLarge.map(f => f.filename).join(', ');
+          return Promise.reject(ServerErrors.BadRequest(`The files ${files} are too large`));
         }
       }
 
