@@ -28,15 +28,16 @@ module.exports = {
       const length = parseInt(req.query.length, 10);
 
       const totalPromise = Model.count({});
+      const filteredTotal = Model.count(query);
       const filtered = Model.find(query).select(selects).sort(sorter).skip(start).limit(length).lean();
 
-      Promise.all([totalPromise, filtered]).then((results) => {
-        const foundRecords = results[1];
+      Promise.all([totalPromise, filteredTotal, filtered]).then((results) => {
+        const foundRecords = results[2];
 
         const ret = {
           draw: req.query.draw,
           recordsTotal: results[0],
-          recordsFiltered: foundRecords.length,
+          recordsFiltered: results[1],
           data: foundRecords
         };
 
