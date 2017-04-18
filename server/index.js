@@ -113,22 +113,12 @@ app.use(function(req, res, next) {
 });
 
 // set up logging of express handling
-app.use(function(req, res, next) {
-  if (process.env.NODE_ENV === 'testing') {
-    return next();
-  }
-
-  const metaLog = process.env.NODE_ENV === 'production';
-  const expressLog = process.env.NODE_ENV !== 'production';
-
-  return expressWinston.logger({
-    winstonInstance: winston,
-    statusLevels: true,
-    expressFormat: expressLog,
-    msg: '{{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms ',
-    meta: metaLog
-  })(req, res, next);
-});
+app.use(expressWinston.logger({
+  winstonInstance: winston,
+  statusLevels: true,
+  expressFormat: true,
+  msg: '{{req.method}} {{req.url}} {{res.statusCode}} {{res.responseTime}}ms '
+}));
 
 // urlencoded is needed for standard forms. jquery can send urlencoded as well.
 // there's also jsonencoded which is useful for other XHR requests. both can be enabled at the same time.
