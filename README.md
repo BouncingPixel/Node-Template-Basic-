@@ -708,11 +708,15 @@ Other configuration for optional modules:
     The domain used in the mailgun configuration. If left unset, sending emails will simply return without sending and without errors.
   - `mailgunApiKey`
     The API key for accessing mailgun. If left unset, sending emails will simply return without sending and without errors.
+  - `mailgunDefaultFrom`
+    The default address to use in the From field when an email does not have a specific one defined.
+
 - noCaptcha:
   - `nocaptchaSecret`
     The secret, or API key, to use with nocaptcha validation. If not set, the captcha will be bypassed (always pass).
   - `nocaptchaBypass`
     True or false (boolean) to bypass the captcha. Useful for local environments without the need for captcha during testing.
+
 - Rackspace:
   - `rackspaceContainer`
      Required for any rackspace capability. This is the name of the container containing all the files.
@@ -724,6 +728,7 @@ Other configuration for optional modules:
      Required for the direct-to-rackspace uploads. Each account has a URL with a folder that starts with "Mosso"
   - `rackspaceHmacKey`
      Required for the direct-to-rackspace uploads. The HMAC key is set on Rackspace for securing direct file uploads.
+
 - Algolia
   - `algoliaAppId`
     The ID of the app in Algolia containing all the indecies.

@@ -18,14 +18,16 @@ const cachedClientConfig = `(function(root, factory) {
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    SiteConfig = factory();
+    window.SiteConfig = factory();
   }
 }(this, function() {
-  return ${JSON.stringify(nconf.get('client'))};
+  return {
+    ENV: ${JSON.stringify(nconf.get('client'))}
+  };
 }));`;
 
 app.get('/js/config.js', function(req, res) {
-  res.status(200).send(cachedClientConfig);
+  res.set('Content-Type', 'application/javascript').send(cachedClientConfig);
 });
 
 winston.debug('Configuring express for dust using consolidate');
@@ -33,6 +35,11 @@ winston.debug('Configuring express for dust using consolidate');
 app.engine('dust', cons.dust);
 app.set('view engine', 'dust');
 app.set('views', 'views');
+
+// needed for Heroku to get the client's IP address from req.ips[req.ips.length-1]
+if (process.env.NODE_ENV === 'production') {
+  app.enable('trust proxy');
+}
 
 // pre-initialize the dust renderer. necessary because it's possible we send an email before someone loads a page
 cons.dust.render('notatemplate', {
@@ -49,12 +56,15 @@ app.set('x-powered-by', false);
 app.use(compression());
 
 if (process.env.NODE_ENV !== 'production') {
-  winston.debug('Configuring routes for static js files');
-  app.use('/client', express.static('client'));
-  app.use('/libs', express.static('libs'));
-  app.use('/schemas', express.static('schemas'));
-  app.use('/node_modules', express.static('node_modules'));
-  app.use('/views', express.static('views'));
+  winston.debug('Configuring webpack-dev-middleware');
+
+  const webpack = require('webpack');
+  const webpackconfig = require('./webpack.config');
+  const webpackcompiler = webpack(webpackconfig);
+
+  app.use(require('webpack-dev-middleware')(webpackcompiler, {
+    publicPath: webpackconfig.output.publicPath
+  }));
 }
 
 winston.debug('Configuring routes for statics');

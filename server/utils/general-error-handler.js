@@ -21,7 +21,7 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
   res.status(statusCode);
 
   if (statusCode === 401) {
-    if (req.xhr) {
+    if (req.xhr || req.wantsJSON) {
       return res.send('You must be logged in');
     }
     req.session.redirectto = req.path;
@@ -37,12 +37,21 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
 
   const logMessage = _determineLogMessage(err, defaultMessage);
 
-  if (statusCode >= 500 || statusCode === 400) {
+  // log everything that is not a 401, 403, or 404 error
+  if ([401, 403, 404].indexOf(statusCode) === -1) {
     logger.warn(logMessage);
     logger.warn(err);
+  } else if (statusCode !== 404) {
+    // info the non-404s just in case
+    logger.debug(logMessage);
+    logger.debug(err);
+  } else {
+    // 404s are really just silly in reality, but here just in case
+    logger.silly(logMessage);
+    logger.silly(err);
   }
 
-  if (req.xhr) {
+  if (req.xhr || req.wantsJSON) {
     return res.send(logMessage);
   }
   if (req.method.toLowerCase() === 'post') {

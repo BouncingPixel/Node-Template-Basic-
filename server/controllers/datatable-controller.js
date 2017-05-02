@@ -5,8 +5,12 @@ module.exports = {
   // the function doesn't quite classify as a middleware, so I picked making it a controller
   makeHandler: function(Model) {
     return function(req, res) {
+      const extraCols = req.query.extraColumns ? (req.query.extraColumns.map(c => {
+        return {data: c};
+      })) : [];
+
       // why does this end up becoming one col of data? so weird
-      const selects = req.query.columns.reduce((c, col) => {
+      const selects = extraCols.concat(req.query.columns).reduce((c, col) => {
         c[col.data] = 1;
         return c;
       }, {});
@@ -17,6 +21,14 @@ module.exports = {
         }
         return q;
       }, {});
+
+      const extraFilter = req.query.extraFilter;
+      if (extraFilter) {
+        for (let k in extraFilter) {
+          // since this is passthrough, mongo query operators are available
+          query[k] = extraFilter[k];
+        }
+      }
 
       const sorter = req.query.order.reduce((s, orderInfo) => {
         const col = req.query.columns[orderInfo.column];

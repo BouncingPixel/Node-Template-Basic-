@@ -141,19 +141,10 @@
 
   <script src="//cdn.polyfill.io/v2/polyfill.min.js"></script>
   <script src="//cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.js"></script>
+  <script src="/libs/imgix.min.js"></script>
 
-  {^NODE_ENV_PRODUCTION}
-    <script src="/libs/pixel-validate/mongoose.js"></script>
-  {/NODE_ENV_PRODUCTION}
-
-  <script src="/libs/system.js"></script>
-  <script src="/client/config.js"></script>
-  {?NODE_ENV_PRODUCTION}
-    <script src="/js/admin.js"></script>
-  {/NODE_ENV_PRODUCTION}
-  <script>
-    SystemJS.import('client/admin.js');
-  </script>
+  <script src="/libs/mongoose.js"></script>
+  <script src="/js/admin.js"></script>
 
   </body>
 </html>

@@ -21,16 +21,29 @@ module.exports = {
   validateField: validateField
 };
 
-$.fn.pixelValidate = function(Schema, _options) {
+$.fn.pixelValidate = function(Schema, options) {
   return this.each(function(formIndex, formElement) {
     const form = $(formElement);
 
-    $('[name]', form).not('button').on('change', function() {
+    function serializeForm() {
+      let data = form.serializeObject();
+
+      if (options && options.postSerialize) {
+        const replaceddata = options.postSerialize(data);
+        if (replaceddata != null) {
+          data = replaceddata;
+        }
+      }
+
+      return data;
+    }
+
+    $('[name],[data-validate-path]', form).not('button').on('change', function() {
       const field = $(this);
 
-      const allData = form.serializeObject();
+      const allData = serializeForm();
 
-      const htmlPath = field.attr('name');
+      const htmlPath = field.data('validatePath') || field.attr('name');
       const dotPath = htmlPathToDotPath(htmlPath);
 
       validateField(allData, dotPath, Schema).then(function() {
@@ -63,7 +76,7 @@ $.fn.pixelValidate = function(Schema, _options) {
 
       const button = $(this);
 
-      const data = form.serializeObject();
+      const data = serializeForm();
 
       function handleFormResult(error) {
         const validationErrors = error && error.errors;
@@ -83,7 +96,13 @@ $.fn.pixelValidate = function(Schema, _options) {
             const keypath = dotPathToHtmlPath(prop);
 
             const message = errorInfo.message;
-            const field = $(`[name="${keypath}"]`, form);
+            let field = $(`[name="${keypath}"]`, form);
+
+            if (!field || !field.length) {
+              const propparts = prop.split('.');
+              const lastprop = propparts[propparts.length - 1];
+              field = $(`#${lastprop}`);
+            }
 
             const skipValidation = field.data('skipValidation');
             const ignoreEmpty = field.data('ignoreEmpty');
@@ -109,6 +128,12 @@ $.fn.pixelValidate = function(Schema, _options) {
         } else {
           // focus and scroll to the issue
           const firstElement = $($('.invalid', form)[0]);
+
+          const parentTab = firstElement.parents('.tabpanel');
+          if (parentTab.length) {
+            $('ul.tabs').tabs('select_tab', parentTab[0].id);
+          }
+
           firstElement.focus();
 
           // const halfHeight = $(window).height() / 2;

@@ -22,6 +22,16 @@ exports.ValidateMiddlware = function(Schema, redirectto) {
 
       const errors = err.errors;
 
+      if (req.xhr || (req.accepts('html', 'json') === 'json')) {
+        const message = Object.keys(errors).map((prop) => {
+          const errorInfo = errors[prop];
+          return errorInfo.message;
+        }).join(', ');
+
+        res.status(400).send(message);
+        return;
+      }
+
       Object.keys(errors).forEach((prop) => {
         const errorInfo = errors[prop];
         const message = errorInfo.message;

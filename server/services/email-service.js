@@ -9,6 +9,7 @@ const logger = require('winston');
 const dust = require('dustjs-linkedin');
 const emailTemplatesPath = '../emails/';
 
+const defaultFrom = nconf.get('mailgunDefaultFrom');
 const domain = nconf.get('mailgunDomain');
 const mailgun = (domain && nconf.get('mailgunApiKey')) ?
     require('mailgun-js')({apiKey: nconf.get('mailgunApiKey'), domain: domain}) :
@@ -18,7 +19,7 @@ function formatEmailAddress(person) {
   if (typeof person === 'string') {
     return person;
   }
-  return person.name + '<' + person.email + '>';
+  return `${person.name} <${person.email}>`;
 }
 
 function getValue(item, opts) {
@@ -45,10 +46,12 @@ module.exports = bluebird.promisifyAll({
    */
   sendTemplateEmail: function(opts, done) {
     if (!opts) {
+      logger.warn('No options were sent, ignoring email request');
       return done(null);
     }
 
     if (!mailgun) {
+      logger.warn('Mailgun is not configured, ignoring email request');
       return done(null);
     }
 
@@ -60,25 +63,32 @@ module.exports = bluebird.promisifyAll({
     const template = templateCache[templateName];
 
     if (!template) {
+      logger.warn(`Template '${templateName}' was not found, ignoring email request`);
       return done(null);
     }
 
-    const recipients = getValue(template.to, opts) ||
-      opts.recipients.filter(function(person) {
+    // get everyone defined in the .to of the template and concat with any extra recipients listed in the options
+    const recipients = (getValue(template.to, opts) || []).concat(
+      (opts.recipients || []).filter(function(person) {
         if (typeof person === 'string') {
           return true;
         }
 
         return !(person.emailOptOut && (person.emailOptOut === true || person.emailOptOut[templateName]));
-      });
+      }));
 
     if (!recipients.length) {
+      logger.warn('No recipients to send to, ignoring email request');
       return done(null);
     }
 
     const toEmails = recipients.map(formatEmailAddress);
 
-    const fromEmail = getValue(template.from, opts) || 'noreply@smallcellsite.com';
+    const fromEmail = getValue(template.from, opts) || defaultFrom;
+    if (!fromEmail || !fromEmail.length) {
+      logger.warn('No from email, ignoring email request');
+      return done(null);
+    }
 
     const individualVars = recipients.reduce(function(obj, recipient) {
       const mergeVars = template.individualVars(recipient, opts);
@@ -124,7 +134,9 @@ module.exports = bluebird.promisifyAll({
       }
     ], function(err) {
       // we only log mail errors, but silently ignore for the user, so their request continues
-      logger.warn(err);
+      if (err) {
+        logger.warn(err);
+      }
       done(null);
     });
   }

@@ -20,13 +20,29 @@ winston.debug('Loading express server');
 const express = require('express');
 const app = express.Router();
 
-if (nconf.get('requireHTTPS') === true || nconf.get('requireHTTPS') === 'true') {
+const requireHttps = nconf.get('requireHTTPS') && nconf.get('requireHTTPS').toString() === 'true';
+const httpsRedirect = nconf.get('httpsRedirect') && nconf.get('httpsRedirect').toString() === 'true';
+
+const requireDomain = nconf.get('forceDomain') && nconf.get('forceDomain').toString() === 'true';
+const sitedomain = nconf.get('domain');
+
+if (requireHttps || requireDomain) {
   app.use(function(req, res, next) {
-    if (req.headers['x-forwarded-proto'] !== 'https') {
-      return res.redirect(['https://', req.get('Host'), req.url].join(''));
+    const host = requireDomain ? sitedomain : req.get('Host');
+
+    if (requireHttps && httpsRedirect) {
+      if (req.headers['x-forwarded-proto'] !== 'https') {
+        return res.redirect(['https://', host, req.url].join(''));
+      }
+
+      res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     }
 
-    res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    if (requireDomain && req.get('Host') !== sitedomain) {
+      const proto = requireHttps ? 'https://' : (req.protocol + '://');
+      return res.redirect([proto, host, req.url].join(''));
+    }
+
     next();
   });
 }
@@ -94,6 +110,20 @@ app.use(function(req, res, next) {
   if (req.user) {
     res.locals.loggedInUser = req.user;
   }
+
+  res.locals.requireHTTPS = nconf.get('requireHTTPS');
+  res.locals.sitedomain = sitedomain;
+  res.locals.gatrackerid = nconf.get('gatrackerid');
+  res.locals.facebookpixelcode = nconf.get('facebookpixelcode');
+
+  let pagecanonProto = '';
+  if (res.locals.requireHTTPS && res.locals.requireHTTPS.toString() === 'true') {
+    pagecanonProto = 'https';
+  } else {
+    pagecanonProto = 'http';
+  }
+
+  res.locals.pagecanonURL = `${pagecanonProto}://${sitedomain}${req.path}`;
 
   res.locals.ENV = nconf.get('client');
 

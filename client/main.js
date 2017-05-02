@@ -1,12 +1,11 @@
-import $ from 'jquery';
+const $ = require('jquery');
 
-import 'jquery-ui';
-import slidebars from 'slidebars';
+const axios = require('axios');
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-import '../libs/pixel-validate/browser.js';
-
-import dust from 'dustjs-linkedin';
-import dustHelperLoader from '../libs/dust-helpers';
+const dust = require('dustjs-linkedin/lib/dust');
+require('dustjs-helpers');
+const dustHelperLoader = require('../libs/dust-helpers');
 dustHelperLoader(dust);
 
 const sidebarMenuController = new slidebars();

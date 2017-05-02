@@ -1,3 +1,6 @@
+const rules = require('./.eslintrules');
+rules['no-console'] = [0];
+
 module.exports = {
   "env": {
     "commonjs": true,
@@ -9,8 +12,8 @@ module.exports = {
     "sourceType": "module"
   },
   "globals": {
-    "ServerErrors": true
+    "paypal": true
   },
   "extends": "eslint:recommended",
-  "rules": require('./.eslintrules')
+  "rules": rules
 };

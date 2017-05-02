@@ -1,15 +1,18 @@
-import $ from 'jquery';
+const $ = require('jquery');
+require('trumbowyg');
+// require('materialize-css/dist/js/materialize.js');
+require('../public/libs/materialize.min');
+require('datatables');
 
-import 'jquery-ui';
-import 'trumbowyg';
-import 'materialize';
-import 'datatables';
+const axios = require('axios');
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-import '../libs/pixel-validate/browser.js';
-
-import dust from 'dustjs-linkedin';
-import dustHelperLoader from '../libs/dust-helpers';
+const dust = require('dustjs-linkedin/lib/dust');
+require('dustjs-helpers');
+const dustHelperLoader = require('../libs/dust-helpers');
 dustHelperLoader(dust);
+
+require('../libs/pixel-validate/browser.js');
 
 $('.button-collapse').sideNav({'edge': 'left'});
 $('select').not('.disabled').material_select();

@@ -46,7 +46,9 @@ module.exports = bluebird.promisifyAll({
     }
 
     client.removeFile(rackspaceContainer, filename, function(err) {
-      logger.warn(err);
+      if (err) {
+        logger.warn(err);
+      }
       // ignore errors if the old file fails to be removed, we can clean up manually
       done();
     });

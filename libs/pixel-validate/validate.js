@@ -25,6 +25,13 @@ function validateFieldFactory(Document) {
     return new Promise((resolve, reject) => {
       const doc = new Document(allData, Schema);
       const p = Schema.path(dataPath);
+
+      // then it doesnt need to be checked
+      if (!p) {
+        resolve();
+        return;
+      }
+
       // do it this way, so any necessary casting occurs
       const value = doc.get(dataPath);
 

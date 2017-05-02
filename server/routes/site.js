@@ -14,6 +14,31 @@ const coWrapRoute = require('../utils/co-wrap-route');
 router.get('/', controllers.FooController.index);
 router.get('/withco', coWrapRoute(controllers.FooController.withco));
 
+const oldToNewRedirects = {
+  '/about': '/about-mysite',
+
+  '/oldblogs/:slug': '/newblogs/${slug}'
+};
+
+for (const oldUrl in oldToNewRedirects) {
+  const newUrl = oldToNewRedirects[oldUrl];
+  const hasParams = oldUrl.indexOf('/:') !== -1;
+
+  router.get(oldUrl, function(req, res) {
+    if (!hasParams) {
+      res.redirect(newUrl);
+      return;
+    }
+
+    const formattedUrl = newUrl.replace(/\$\{([a-z]+)\}/g, function(match, param) {
+      return req.params[param];
+    });
+
+    res.redirect(formattedUrl);
+  });
+}
+
+
 // example image upload:
 // form field: image
 // if user uploads "myfile.png", the resulting files are:
