@@ -5,7 +5,7 @@ const User = require('../models/user');
 
 module.exports = {
   index: function(req, res) {
-    res.render('main');
+    res.render('layouts/main');
   },
 
   withco: function*(req, res) {
