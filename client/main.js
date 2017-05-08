@@ -1,4 +1,6 @@
 const $ = require('jquery');
+const slidebars = require('../libs/slidebars.js');
+
 
 const axios = require('axios');
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
