@@ -11,7 +11,8 @@ const controllers = require('../controllers/');
 const coWrapRoute = require('../utils/co-wrap-route');
 
 // define routes below
-router.get('/', controllers.FooController.index);
+/* Static route
+router.get('/', controllers.FooController.index); */
 router.get('/withco', coWrapRoute(controllers.FooController.withco));
 
 const oldToNewRedirects = {

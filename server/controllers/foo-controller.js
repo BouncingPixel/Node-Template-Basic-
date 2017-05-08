@@ -11,7 +11,7 @@ module.exports = {
   withco: function*(req, res) {
     const someUser = yield User.findOne({});
 
-    res.render('main', {someUser: someUser});
+    res.render('layouts/main', {someUser: someUser});
   }
 
 };
