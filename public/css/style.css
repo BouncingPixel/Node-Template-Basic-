@@ -75,15 +75,15 @@ body.slidebars-open {
   position: fixed;
 }
 #mobile-menu-toggle {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    height: 34px;
-    cursor: pointer;
-    padding-left: 40px;
-    border: 2px solid rgb(0,0,0);
-    border-radius: 4px;
-    border-width: 2px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  height: 34px;
+  cursor: pointer;
+  padding-left: 40px;
+  border: 2px solid rgb(0,0,0);
+  border-radius: 4px;
+  border-width: 2px;
 }
 #mobile-menu-toggle:before {
   content: "";
@@ -95,17 +95,19 @@ body.slidebars-open {
   border-top: 10px double rgb(0,0,0);
   border-bottom: 3px solid rgb(0,0,0);
 }
+#mobile-nav a { color: white; }
+#mobile-nav a:hover { text-decoration: none; }
 #mobile-nav li {
   list-style-type:none;
   display: block;
   padding-bottom: 20px;
 }
 #mobile-nav ul {
-    margin-top: 26px;
-    margin-left: 40px;
-    text-align: left;
-    max-height: 60vh;
-    overflow: auto;
+  margin-top: 26px;
+  margin-left: 40px;
+  text-align: left;
+  max-height: 80vh;
+  overflow: auto;
 }
 #mobile-nav ul ul {
   margin-top: 10px;
@@ -114,7 +116,6 @@ body.slidebars-open {
 #mobile-nav ul.mobile-nav-sub-list li {
   padding-bottom: 10px;
 }
-
 /*---END Mobile nav---*/
 
 
