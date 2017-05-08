@@ -75,7 +75,7 @@
   <body>
 
     {+main_content}{/main_content}
-
+    {> "partials/mobile-slidebar.dust" /}
   </body>
 
   <script src="//cdn.polyfill.io/v2/polyfill.min.js"></script>

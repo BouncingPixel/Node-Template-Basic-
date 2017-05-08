@@ -4,4 +4,7 @@
 
 <h1>Hello, World!</h1>
 
+<!--<div id="mobile-menu-toggle" class="show-for-mobile"></div>-->
+<div id="mobile-menu-toggle" class=""></div>
+
 {/main_content}

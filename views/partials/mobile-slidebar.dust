@@ -1,0 +1,27 @@
+<div id="mobile-nav" off-canvas="mobile-nav-canvas left overlay">
+  <ul>
+    <li>
+      <a href="/about" class="nav-button">About</a>
+    </li>
+    {!
+      Nested list
+      * Data-name used by script to toggle display property
+      * <a> and <ul> data-name must match
+    !}
+    <li>
+      <a href="#" class="nav-button nav-sub-button" data-name="Nested List">Nested List<i class="icon-down-dir"></i></a>
+      <ul class="mobile-nav-sub-list hidden" data-name="Nested List">
+        <li><a href="#">List Item 1</a></li>
+        <li><a href="#">List Item 2</a></li>
+        <li><a href="#">List Item 3</a></li>
+      </ul>
+    </li>
+    <li>
+      <a href="#" class="nav-button">Blog</a>
+    </li>
+    <li>
+      <a href="#" class="nav-button">Contact</a>
+    </li>
+  </ul>
+
+</div>
