@@ -5,13 +5,13 @@ const User = require('../models/user');
 
 module.exports = {
   index: function(req, res) {
-    res.render('main');
+    res.render('layouts/main');
   },
 
   withco: function*(req, res) {
     const someUser = yield User.findOne({});
 
-    res.render('main', {someUser: someUser});
+    res.render('layouts/main', {someUser: someUser});
   }
 
 };
