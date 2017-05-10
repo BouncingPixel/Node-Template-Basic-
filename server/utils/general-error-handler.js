@@ -75,7 +75,7 @@ module.exports = function generalErrorHandler(err, req, res, _next) {
   const codeGroupPage = statusCodePage.substr(0, statusCodePage.length - 2) + 'xx';
   let possibleViews = err.showView ? [err.showView] : [];
 
-  const url = req.path.substring(1);
+  const url = req.path.replace(/\/{2,}/g, '/').substring(1);
 
   let slashIndex = url.lastIndexOf('/');
   while (slashIndex !== -1) {
