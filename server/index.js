@@ -20,6 +20,9 @@ winston.debug('Loading express server');
 const express = require('express');
 const app = express.Router();
 
+const isMongoEnabled = nconf.get('isMongoEnabled');
+const isAuthEnabled = nconf.get('isAuthEnabled');
+
 const requireHttps = nconf.get('requireHTTPS') && nconf.get('requireHTTPS').toString() === 'true';
 const httpsRedirect = nconf.get('httpsRedirect') && nconf.get('httpsRedirect').toString() === 'true';
 
@@ -57,12 +60,12 @@ if (nconf.get('WEBTOOLS_VERIF_ID')) {
   });
 }
 
-winston.debug('Using Mongo for sessions');
-const sessionStore = new MongoStore({
+winston.debug('Setting up session store');
+const sessionStore = isMongoEnabled ? new MongoStore({
   mongooseConnection: mongoose.connection,
   ttl: 14 * 24 * 3600,
   touchAfter: 3600
-});
+}) : (new session.MemoryStore());
 
 winston.debug('Configuring util functions');
 app.use(function(req, res, next) {
@@ -84,35 +87,37 @@ app.use(session({
 
 app.use(flash());
 
-app.use(passport.initialize());
-app.use(passport.session());
+if (isAuthEnabled) {
+  app.use(passport.initialize());
+  app.use(passport.session());
 
-const PassportService = require('./services/passport-service');
-passport.serializeUser(PassportService.serializeUser);
-passport.deserializeUser(PassportService.deserializeUser);
+  const PassportService = require('./services/passport-service');
+  passport.serializeUser(PassportService.serializeUser);
+  passport.deserializeUser(PassportService.deserializeUser);
 
-passport.use(PassportService.localStrategy);
+  passport.use(PassportService.localStrategy);
 
-if (PassportService.passwordlessStrategy) {
-  passport.use('passwordless', PassportService.passwordlessStrategy);
-}
-if (PassportService.rememberMeStrategy) {
-  passport.use('remember-me', PassportService.rememberMeStrategy);
-}
-if (PassportService.facebookStrategy) {
-  passport.use(PassportService.facebookStrategy);
-}
-if (PassportService.googleStrategy) {
-  passport.use(PassportService.googleStrategy);
-}
-if (PassportService.twitterStrategy) {
-  passport.use(PassportService.twitterStrategy);
-}
-if (PassportService.linkedinStrategy) {
-  passport.use(PassportService.linkedinStrategy);
-}
+  if (PassportService.passwordlessStrategy) {
+    passport.use('passwordless', PassportService.passwordlessStrategy);
+  }
+  if (PassportService.rememberMeStrategy) {
+    passport.use('remember-me', PassportService.rememberMeStrategy);
+  }
+  if (PassportService.facebookStrategy) {
+    passport.use(PassportService.facebookStrategy);
+  }
+  if (PassportService.googleStrategy) {
+    passport.use(PassportService.googleStrategy);
+  }
+  if (PassportService.twitterStrategy) {
+    passport.use(PassportService.twitterStrategy);
+  }
+  if (PassportService.linkedinStrategy) {
+    passport.use(PassportService.linkedinStrategy);
+  }
 
-app.use(passport.authenticate('remember-me'));
+  app.use(passport.authenticate('remember-me'));
+}
 
 // optional, but sometimes handy!
 app.use(function(req, res, next) {

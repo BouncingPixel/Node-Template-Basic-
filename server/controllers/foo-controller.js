@@ -1,7 +1,6 @@
 'use strict';
 
-// controllers need to include models this way to avoid errors
-const User = require('../models/user');
+// const User = require('../models/user');
 
 module.exports = {
   index: function(req, res) {
@@ -9,9 +8,9 @@ module.exports = {
   },
 
   withco: function*(req, res) {
-    const someUser = yield User.findOne({});
+    // const someUser = yield User.findOne({});
 
-    res.render('layouts/main', {someUser: someUser});
+    res.render('layouts/main', {someUser: null});
   }
 
 };

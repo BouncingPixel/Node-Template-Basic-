@@ -40,6 +40,17 @@ nconf.argv()
     }
   });
 
+const isMongoEnabled = nconf.get('mongoConnectStr') && nconf.get('mongoConnectStr').length;
+const isAuthEnabled = isMongoEnabled && disableAuth && disableAuth.toString().toLowerCase() === 'true';
+
+nconf.add('suppliedenables', {
+  type: 'literal',
+  store: {
+    'isMongoEnabled': isMongoEnabled,
+    'isAuthEnabled': isAuthEnabled
+  }
+});
+
 const bluebird = require('bluebird');
 const mongoose = require('mongoose');
 mongoose.Promise = bluebird;
@@ -53,10 +64,22 @@ Promise
   .resolve(true)
   .then(() => {
     // load up mongoose. may even need to load other things
-    winston.debug('Connect to mongoose database');
-    return mongoose.connect(nconf.get('mongoConnectStr'), {autoindex: process.env.NODE_ENV !== 'production'});
+    if (isMongoEnabled) {
+      const mongoConnectString = nconf.get('mongoConnectStr');
+
+      winston.debug('Connect to mongoose database');
+      return mongoose.connect(mongoConnectString, {autoindex: process.env.NODE_ENV !== 'production'});
+    } else {
+      winston.debug('No mongo database to connect to. Skipping mongo.');
+      return false;
+    }
   })
-  .then(() => {
+  .then((ret) => {
+    // if the above returned false, no need to pre-load models
+    if (ret === false) {
+      return false;
+    }
+
     // pre-load all models
     const modelDirectory = path.resolve(__dirname, './server/models');
     const potentialModels = fs.readdirSync(modelDirectory).filter(isJsAndNotIndex).map((model) => model.substring(0, model.length - 3));
