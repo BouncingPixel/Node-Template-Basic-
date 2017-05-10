@@ -103,7 +103,7 @@ module.exports = bluebird.promisifyAll({
     async.waterfall([
       function(callback) {
         let locals = template.mergeVars(opts);
-        locals.emailurl = nconf.get('siteDomain');
+        locals.emailurl = nconf.get('domain');
         const renderOptions = {
           view: null,
           views: emailTemplatesPath,
