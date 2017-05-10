@@ -685,8 +685,10 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
 
 - `mongoConnectStr`
   The full connection string to the mongo database including the host, port, replicaset, username, password, and database name.
-- `siteDomain`
-  The domain of the site, used in emails sent out, but can be used in other places with redirects.
+- `domain`
+  The domain of the site, used in canonical URLs and emails sent out, but can be used in other places with redirects.
+- `forceDomain`
+  Set to true if the site should redirect to force the `domain` listed. Defaults to `false`.
 - `logLevel`
   The log level to output and store. Defaults to `debug`.
 - `port`
@@ -696,11 +698,20 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
 - `maxLockTime`
   The maximum length of time an account may be locked out. Defaults to `1 hour`.
 - `requireHTTPS`
-  Set to true if the site should require HTTPS. Defaults to `false`.
+  Set to true if the site should use HTTPS in all URLs (such as canonical). Defaults to `false`.
+- `httpsRedirect`
+  Set to true if the site should redirect to HTTPS. You might want false and let CloudFlare do it. Defaults to `false`.
 - `sessionSecret`
   The secret to use to sign the session cookie.
 - `redirectOn401`
   The page to redirect to when a 401 (not authenticated) occurs and the request was not JSON. Defaults to `/login`.
+
+- `gatrackerid`
+  The tracker ID for Google Analytics. When set, the GA code will be added to the page.
+- `facebookpixelcode`
+  The tracker ID for Facebook Pixel. When set, the Facebook Pixel code will be added to the page.
+- `WEBTOOLS_VERIF_ID`
+  The ID for Webmaster Tools verification. When set, a file will be dynamically generated to assist with Webmaster Tools verifications. Simply set this field to enable the feature.
 
 Other configuration for optional modules:
 - email via Mailgun:

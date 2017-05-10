@@ -47,6 +47,16 @@ if (requireHttps || requireDomain) {
   });
 }
 
+if (nconf.get('WEBTOOLS_VERIF_ID')) {
+  const webtoolsVerifId = nconf.get('WEBTOOLS_VERIF_ID');
+  const fileName = `/${webtoolsVerifId}.html`;
+  const fileContents = `google-site-verification: ${webtoolsVerifId}.html`;
+
+  app.get(fileName, function(req, res) {
+    res.status(200).send(fileContents);
+  });
+}
+
 winston.debug('Using Mongo for sessions');
 const sessionStore = new MongoStore({
   mongooseConnection: mongoose.connection,
