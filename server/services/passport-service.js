@@ -110,10 +110,13 @@ const PassportService = {
         const maxFailTries = parseInt(nconf.get('maxFailTries'), 10);
         const maxLockTime = parseInt(nconf.get('maxLockTime'), 10);
         if (lockInfo.failedCount > maxFailTries) {
-          lockInfo.lockedUntil = Math.min(
+          const lockedForMs = Math.min(
             maxLockTime,
             Math.pow(lockInfo.failedCount - maxFailTries, 2) * 5
           );
+
+          const lockedUntilTime = new Date().getTime() + lockedForMs;
+          lockInfo.lockedUntil = new Date(lockedUntilTime);
         }
 
         yield lockInfo.save();
