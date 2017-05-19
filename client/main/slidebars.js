@@ -1,14 +1,14 @@
 const $ = require('jquery');
-const Slidebars = require('../../libs/slidebars');
+const Slidebars = require('../libs/slidebars');
 
 // --Slidebars implementation --
-const controller = new Slidebars();
-controller.init();
+const slidebarsMenu = new slidebars();
+slidebarsMenu.init();
 
 $('#mobile-menu-toggle').on('click', (e) => {
   e.stopPropagation();
   e.preventDefault();
-  controller.toggle('mobile-nav-canvas');
+  slidebarsMenu.toggle('mobile-nav-canvas');
   document.querySelector('body').classList.toggle('slidebars-open');
 });
 
@@ -28,7 +28,8 @@ $('.nav-sub-button').on('click', (e) => {
 
 $('body').on('click', (_e) => {
   if ($('.slidebars-open').length > 0) {
-    controller.close();
+    slidebarsMenu.close();
     $('body').removeClass('slidebars-open');
   }
 });
+

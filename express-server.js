@@ -46,8 +46,7 @@ cons.dust.render('notatemplate', {
   ext: app.get('view engine'),
   views: path.resolve(__dirname, app.get('views'))
 }, function() { /* we don't care about the return, it's an error anyway. but Dust is ready now */ });
-require('./libs/dust-helpers')(cons.requires.dust);
-
+require('@bouncingpixel/dust-helpers')(cons.requires.dust);
 
 // don't expose we use Express. need to know basis
 app.set('x-powered-by', false);

@@ -8,16 +8,10 @@
   - [Style guide](#style-guide)
   - [Routes and Controllers](#routes-and-controllers)
   - [Error Handling](#error-handling)
-  - [Using Mongoose](#using-mongoose)
-  - [Using Datatables](#using-datatables)
-  - [Single Sign On](#single-sign-on)
-  - [Using Algolia](#using-algolia)
-  - [Using Image Uploads](#using-image-uploads)
-  - [Using File Uploads](#using-file-uploads)
-  - [Using Direct-to-Rackspace](#using-direct-to-rackspace)
 - [Directory Structure](#directory-structure)
 - [Default Packages](#default-packages)
 - [Other packages for tasks](#other-packages-for-tasks)
+- [Optional Utility Packages](#optional-utility-packages)
 - [Configuration](#configuration)
 - [Other notes](#other-notes)
 
@@ -26,7 +20,6 @@
 ### System Requirements
 
 - NodeJS 6 LTS
-- MongoDB 3.x
 - Yarn (an alternative to npm). See https://yarnpkg.com/docs/install
 - Webpack. Install with `npm install -g webpack`
 - ESLint: Helps with keeping code style and prevents a limited, yet common set of bugs through static analysis.
@@ -149,15 +142,16 @@ router.get('/profile/:userid', middlewares.RequireLoggedIn, controllers.UserCont
 ```
 
 Route handlers may utilize ES6 generators to make use of `yield`. ES6 is a great way to avoid direct use
-of Async and Promises making the code look synchronous. If the middleware or controller use generators,
+of Async and Promises making the code look synchronous. If the controller uses generators,
 then use the `server/utils/co-wrap-route.js` utility.
+The utility does not work for middleware.
 
 For example:
 
 ```js
 router.get(
   '/profile/:userid',
-  coWrapRoute(middlewares.RequireLoggedInGen),
+  middlewares.RequireLoggedIn,
   coWrapRoute(controllers.UserController.showProfileGen)
 );
 ```
@@ -178,33 +172,35 @@ for that route or handle the error directly in the middleware where the error oc
 
 The general error handler will either send a message via JSON for AJAX calls or it will render an error page.
 Errors can have a custom field, status, which defines which HTTP status code to use for that error.
-If the status is not defined, a 500 status is assumed. A globally defined utility, `ServerErrors`, exists to help
-generate errors with status defined for you. The following helper functions exist on `ServerErrors` to set specific codes:
+If the status is not defined, a 500 status is assumed. A helper package, `@bouncingpixel/http-errors`, exists to help
+generate errors with status defined for you. The following Error classes exist in `@bouncingpixel/http-errors` to set specific codes:
 
-| Error         | Status |
-|---------------|:------:|
-| BadRequest    |  400   |
-| NotAuthorized |  401   |
-| Banned        |  402   |
-| Forbidden     |  403   |
-| NotFound      |  404   |
-| AccountLocked |  429   |
-| ServerError   |  500   |
+| Error                 | Status |
+|-----------------------|:------:|
+| BadRequestError       |  400   |
+| NotAuthorizedError    |  401   |
+| BannedError           |  402   |
+| ForbiddenError        |  403   |
+| NotFoundError         |  404   |
+| AccountLockedError    |  429   |
+| InternalServerError   |  500   |
 
-To raise one of these errors, you may either:
-- call `next`, for example: `next(ServerErrors.BadRequest('My Error Message'));`
-- or throw the error, for example `throw ServerErrors.BadRequest('My Error Message');`
+To raise one of these errors, first require in the `@bouncingpixel/http-errors` package, then just use like any other Error
+- call `next`, for example: `next(new HttpErrors.BadRequestError('My Error Message'));`
+- or throw the error, for example `throw new HttpErrors.BadRequestError('My Error Message');`
+- or use in a callback, for example `done(new HttpErrors.BadRequestError('My Error Message'));`
+- or any other use of an Error object
 
-**Important** Be sure to immediately follow a `return` statement after using `next()` or `throw`.
+**Important** Be sure to immediately follow a `next()` call with a `return` statement to prevent further processing.
 
-The first parameter to a function defined in `ServerErrors` is the message to be thrown. A second, optional parameter
-to the function allows one to customize the exact view template to use when rendering an error page.
+See [Http-Errors](https://github.com/BouncingPixel/node-packages/tree/master/http-errors).
+
 Alternatively, when using Error, `status` may be set along with `showView` to define the specific template.
 
 When the generic error handler is rendering a page, it may use fallback pages if the specified page does not exist.
 The order the error handler will try is defined by:
 
-- The template set in `showView`, passed to `ServerErrors` second parameter, or based on the default for the `ServerErrors`
+- The template set in `showView` if set on the Error object
 - Templates within any subdirectories up to the root views directory for:
   - A template based on the status code
   - A template based on the status code class (ex all 400-499 fall back to 4xx and 500-599 fall back to 5xx)
@@ -221,13 +217,14 @@ Example code: 503 with `showView` set to "errors/oops" with the URL "blog/this-i
 - errors/error.dust
 - No template, just send the string
 
-### Using Mongoose
+### Using A Database
 
-The template utilizes Mongoose for working with Mongo data. Mongoose uses schemas and models to provide structure.
-These models also make defining relationships, querying data, and other tasks simpler by having a defined structure.
+A database is optional. Many applications will use `mongoose` and thus use `@bouncingpixel/mongoose-db`.
 
-Adding a new model and schema is simply adding a file to `server/models` and using standard Mongoose to define everything.
-The file should export the final resulting model. The schema does not need to be exported as it can be retrieved by the model.
+If using `mongoose`, place the Schemas in `schema` directory.
+Mongoose schemas are supported in the browser and can be used by `@bouncingpixel/pixel-validate`.
+
+If using an ORM, models should go in the `server/models` directory.
 
 Some models can define instance and static utility functions to aid in fetching or performing tasks on the data.
 Some models may also define hooks to perform actions following other actions. For example, the User model may use an pre-save
@@ -235,189 +232,13 @@ hook to bcrypt a newly set password before saving to the database. Using hooks h
 following another action do happen. This mitigates the possibility of a developer performing one action and forgetting to
 perform the necessary actions before or after.
 
-### Using Datatables
-
-Datatable integration is provided through the controller: `server/controllers/datatable-controller.js`. This controller contains one
-factory method, `makeHandler`, which generates a route handler for a specific model. Just pass a reference to the desired
-model. Searching, pagination, sorting, and fetching only the necessary data is built in.
-
-Example:
-
-```js
-router.get('/tabledata', controllers.DatatableController.makeHandler(require('../models/User')));
-```
-
-### Single Sign On
-
-Single sign on support is pre-built for Facebook, Google, LinkedIn, and Twitter. These 4 only need to be configured to be enabled.
-
-1. Set up SSO with the provider (see provider's documentation on setting up OAuth or Single sign on)
-2. Set the `key`|`clientid`|`appid` and `secret` in the config. For example, `sso:facebook:appid` and `sso:facebook:secret`
-3. Be sure to enable the `"provider"Id` field in the User ID by uncommenting it
-4. Magic happens
-
-### Using Algolia
-
-Please see the [Configuration](#configuration) in the optional portion on configuring Algolia.
-
-Algolia is a 3rd party search engine that can be integrated for searching a site's data.
-Algolia is an optional utility that is not required, but is included as it commonly is required.
-
-The provided Algolia integration acts as a plugin for Mongoose schemas. The plugin adds post-save hooks to automatically
-synchronize data with Algolia. The plugin allows a person to define which fields to listen for changes if not all fields are desired.
-The plugin can also automatically remove entries from Algolia when a field is set.
-Functions will also be added to the model to query the search index and to save or remove a data object from Algolia.
-
-The plugin assumes each model will have a separate search index. Currently, there is no support for an index with data
-collected from multiple models. This functionality may be added later if there is a need for it.
-
-To add the plugin to the schema, use the `plugin` method and pass any desired options for the plugin:
-
-```js
-MySchema.plugin(require('../utils/schemas/algolia-methods'), {
-  autoSave: true, // boolean if the auto-save post-save hook should be enabled
-  includeObjectInIndex: fn, // a function to determine if a particular object should be included in Algolia
-  castToObject: fn, // a function to convert an object into the exact data format to be stored in Algolia
-  indexName: str, // the name of the index. with the prefixing system, this is just the 2nd half of the Algolia index name
-  errorsOnNotFound: false, // boolean if the function findOneUpdateAndSync does not find an object to update
-  updateIfAnyField: null, // an array of fields that when changed, will cause an automatic sync to Algolia
-                          // the default null will assume any change should be sync'd to Algolia
-  removeIfFieldSet: ['removed'] // an array of fields that when set to a truthy value will remove the object from Algolia
-                                // when unset, the object will be added to Algolia
-});
-```
-
-### Using Image Uploads
-
-Please see the [Configuration](#configuration) in the optional portion on configuring Rackspace.
-
-Image uploads are processed using `multer`, `gm` (imagemagick) and `pkgcloud` to upload to Rackspace.
-The system will convert uploaded images to the desired format before uploading.
-Configuring the uploader will allow imagemagick operations to occur on an image and store the resulting file.
-An uploaded file can have multiple derivative files with different operations, such as different resizings.
-
-Use the middleware `UploadResizedImage` to add this functionality to a route.
-`UploadResizedImage` is a factory that generates a middleware using an options array. The options array
-specifies which images may be uploaded, how they may be manipulated, and the resulting filenames.
-For imagine manipulation, any `fn` may be a function in the package `gm` and `args` are passed to the function call.
-For example:
-
-- the image will be in the form field: `image`
-- the user is uploading a file named `myfile.png`
-- we would like the original, but in jpg, keeping the original file name
-- we would like a 600 wide resize, then crop to 600x300, saved with a `_wall` added to the name
-- we would like a 200 wide resize, then crop to 200x60, saved with a `_tile` added to the name
-
-```js
-router.post('/uploadImage', middlewares.UploadResizedImage([
-  {
-    field: 'image',
-    isRequired: true,
-    maxSize: 10485760, // optional maximum file size, this is 10MB. defaults to allow all sizes
-    maxFiles: 1, // the maximum number of files uploaded with this field. defaults to 1
-    filename: (req, file) => {
-      // return just the name portion of the filename of the file the user uploaded
-      // alternatively, for random names that will not overlap:
-      // look to use uuid's uuid.v4() or shortid's shortid.generate
-      return path.parse(file.filename).name;
-    },
-    extention: 'jpg',
-    out: {
-      // keep the original with default name as well by doing this:
-      '': [],
-      'wall': [
-        {fn: 'resize', args: [600]},
-        {fn: 'crop', args: [600, 300]}
-      ],
-      'tile': [
-        {fn: 'resize', args: [200]},
-        {fn: 'crop', args: [200, 60]}
-      ]
-    }
-  },
-  // can have multiple fields as well, but only 1 image uploaded per field
-]));
-```
-
-After the images have been uploaded, all resulting filenames are stored in `req.uploads`.
-Each key in the `req.uploads` references the field names used. These point to an array of uploaded file names.
-An array is used at all times, even with maxFiles is 1, to maintain consistency.
-Each item in the array is an object where the keys match the keys in the `out` configuration and the values are
-the file names that are the result of uploading the file for that `out` configuration.
-These urls do not contain the URL portion for Rackspace. That will have to be added by the controller.
-The Rackspace portion is not included as some may wish to use a service such as Imgix or define the URL
-in the templates. In these cases, the database would not store the full URL, only the file name.
-For the above example, the file names could be retrieved by:
-
-```js
-const originalImage = req.uploads.image[0][''];
-const wallImage = req.uploads.image[0].wall;
-const tileImage = req.uploads.image[0].tile;
-```
-
-### Using File Uploads
-
-File uploads are similar to the image uploads, but with a few differences.
-The file upload's `filename` function should contain both the filename and the extension.
-There is no file type conversion. There is no imagemagick to perform any manipulations.
-The file simply is uploaded to Rackspace with the designated filename as is.
-
-```js
-router.post('/uploadFile', middlewares.UploadFile([
-  {
-    field: 'file',
-    isRequired: true,
-    maxSize: 10485760, // optional maximum file size, this is 10MB. defaults to allow all sizes
-    maxFiles: 1, // the maximum number of files uploaded with this field. defaults to 1
-    filename: (req, file) => {
-      // return the full tilename
-      // alternatively, for random names that will not overlap:
-      // look to use uuid's uuid.v4() or shortid's shortid.generate
-      // then append the extesion to it (path.parse(file.filename).ext)
-      return file.filename;
-    }
-  },
-  // can have multiple fields as well, but only 1 file uploaded per field
-]));
-```
-
-Similar to the image upload, the file uploads will also be available on the `req.uploads` object.
-As there is no multiple derivatives for each file, the `req.uploads` is an object where they keys
-are the field names used and the values are an array of files uploaded for that field.
-
-```js
-const filename = req.uploads.file[0];
-```
-
-### Using Direct-to-Rackspace
-
-Please see the [Configuration](#configuration) in the optional portion on configuring Rackspace.
-
-Another option for file uploads is to bypass the server and upload directly to Rackspace.
-This option saves the server resources, but does not permit modifying the file. In these cases,
-using a service such as Imgix will allow efficient resizing and cropping per image to happen.
-In the case where many users may be uploading images at any time, this may be the optimal option.
-
-1. The Rackspace container must be configured with CORS enabled and an HMAC key.
-   A provided tool will help enable these settings and generate a secure, random HMAC key.
-   The tool with ask which domains will be allowed access to upload from.
-   The key should then be added to the configuration.
-
-2. The page that shows the upload will need to use the middleware `UploadDirectVarFactory` to
-   generate the settings for the form. The Dust template for the form must set all the necessary
-   form fields with the provided settings. The middleware accepts two parameters:
-   - `redirectTo`: the path portion of the URL to redirect to after the upload is complete
-   - `fileNameFactory(req)`: a function to determine the filename-prefix and path to store in Rackspace.
-     The exact filename may not be known and is not sent to the `returnTo`. To get around this, one may use
-     a hidden iframe to submit the form, use JS to listen to onLoad events in the iframe, and when the iframe
-     navigates to the `returnTo` page, check for an error. If no error occurred, then the full filename is:
-     the result of the `fileNameFactory(req)` + the filename in the file-input field (fetchable with JS).
-
 ## Directory Structure
 
 ```
 / (project root)
-├── client/ (if using webpack or similar client-side build tool)
+├─┬ client/
+│ ├── admin.js
+│ └── main.js
 ├─┬ config/
 │ ├── config.json
 │ └── local.json
@@ -426,6 +247,7 @@ In the case where many users may be uploading images at any time, this may be th
 │ ├── css/
 │ ├── images/
 │ └── js/
+├── schemas/
 ├─┬ server/
 │ ├── controllers/
 │ ├── emails/
@@ -435,8 +257,7 @@ In the case where many users may be uploading images at any time, this may be th
 │ ├── responses/
 │ ├── routes/
 │ ├── services/
-│ ├─┬ utils/
-│ │ └── schemas/
+│ ├── utils/
 │ ├─┬ views/
 │ │ └── static/
 │ └── index.js
@@ -469,6 +290,10 @@ would be in `/client/`.
 
 See the section [Configuration](#configuration).
 
+### /schemas/
+
+Contains any schemas for ORM models. They are placed here, so they may be used by client and server side.
+
 ### /server/controllers/
 
 Controllers handle much of the logic of the application and also contain the Route handlers.
@@ -478,22 +303,7 @@ See [Routes and Controllers](#routes-and-controllers) for more information.
 
 ### /server/emails/
 
-The email folder is used to store the configuration and dust template files for each email that could be sent.
-An email type must contain both files: a JS file which exports an object containing the configuration for that email,
-and a dust file defining the template to be displayed to the end user. For mass-sent emails that need individual variables,
-Mailgun supports per-recipient variables. Expose the variable in the configuration using `individualVars`, and then
-use the format `%recipient.VARIABLE%` where `VARIABLE` is the name of the variable exposed. All variables shared between
-all recipients can skip the Mailgun template variables and use Dust directly. These variables are exposed with `mergeVars`.
-
-Each email can define who the from address is. This can either be a function which returns the from address or a string.
-Each email can define who the to addresses are. This field is an array and can either contain a string of each email or
-an object such as `{name: "Person's name", email: "email@address.domain"}`.
-Finally, the email configuration must define a subject, which may be a function or a string.
-
-Each of the functions defined for `from`, `subject`, `individualVars`, and `mergeVars` take only one parameter
-which contains all options passed into the call to `sendTemplateEmail`.
-
-Sending an email uses `utils/emailService.js` and the function `sendTemplateEmail`.
+See [mailgun-emails](https://github.com/BouncingPixel/node-packages/tree/master/mailgun-emails).
 
 ### /server/middleware/
 
@@ -507,11 +317,6 @@ The template uses Mongoose for connecting to Mongo DB. Mongoose uses Models to d
 Mongoose also has hook capability to perform actions before other actions, such as bcrypting a password before saving.
 All models should be in this location. Models are not auto-loaded, so they must be required individually by any file
 which may use them.
-
-### /server/responses/
-
-Responses are utilities that handle differences between XHR and standard HTTP requests. They also make it
-easier to display error pages.
 
 ### /server/routes/
 
@@ -528,7 +333,7 @@ See [Routes and Controllers](#routes-and-controllers) for more information.
 ### /server/services/
 
 Services are different utilities that are not handlers for routes, but are utilities controllers and other areas
-may utilize to perform functions. Example services include rackspace, email, and passport.
+may utilize to perform functions.
 
 ### /server/utils/
 
@@ -576,10 +381,6 @@ A special directory for static pages that can be served without creating express
 The static pages are allowed to include layouts or partials. The only limitation is they do not access database.
 They may, however, access the current user, CSRF token, and other variables that are exposed to all routes.
 
-### /server/routes.js
-
-Defines all the routes and maps to middleware and handlers. A short example is included in this repo.
-
 ### /server/server.js
 
 Sets up configuration, creates the express app, connects to any DBs, configures all plugins, and loads routes.
@@ -594,6 +395,11 @@ The standard Node project package.json. The included one is empty to show file s
 begin configuring and `npm install --save package` to save packages to package.json
 
 ## Default Packages
+
+* `@bouncingpixel/error-router`: Utility for handling errors and routing to pages
+* `@bouncingpixel/universal-response`: Utility for universal (XHR vs non-XHR) requests
+* `@bouncingpixel/auto-static-routes`: Utility for automatically creating routes for static pages
+* `@bouncingpixel/http-errors`: Error classes for various HTTP status codes
 
 ### express
 
@@ -651,6 +457,17 @@ to send console logs automatically to the external service.
 * `validator`: utility with standard validators for many common situations such as isEmail, isZip, and more
 * `webpack`: client-side build tool to enable CommonJS syntax, concat, and minification of source
 
+## Optional Utility Packages
+
+* `@bouncingpixel/algolia`: Mongoose schema plugin and other utilities for Algolia
+* `@bouncingpixel/datatable-routes`: Route handler for Datatables
+* `@bouncingpixel/mailgun-emails`: Emailer using mailgun and Dust templates
+* `@bouncingpixel/mongoose-db`: Mongoose database adapter with a passport-impl for the passport-auth
+* `@bouncingpixel/nocaptcha-middleware`: Middleware to validate a nocaptcha response
+* `@bouncingpixel/passport-auth`: User authentication with passport, relies on email as username
+* `@bouncingpixel/pixel-validate`: A tool for using Mongoose schemas to validate on server and in browser
+* `@bouncingpixel/rackspace-uploads`: Express middlewares to aid in uploading files to rackspace
+
 ## Configuration
 
 The template uses `nconf` for configuration. Configuration settings may be set in the following ways:
@@ -683,9 +500,7 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
 
 ### Configuration keys
 
-- `mongoConnectStr`
-  The full connection string to the mongo database including the host, port, replicaset, username, password, and database name.
-- `domain`
+- `siterootHost`
   The domain of the site, used in canonical URLs and emails sent out, but can be used in other places with redirects.
 - `forceDomain`
   Set to true if the site should redirect to force the `domain` listed. Defaults to `false`.
@@ -693,10 +508,6 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
   The log level to output and store. Defaults to `debug`.
 - `port`
   The port to run on. Defaults to `3000`. Heroku and Openshift will have this set for you.
-- `maxFailTries`
-  The maximum number of failed login attempts before locking an account. Defaults to `3`.
-- `maxLockTime`
-  The maximum length of time an account may be locked out. Defaults to `1 hour`.
 - `requireHTTPS`
   Set to true if the site should use HTTPS in all URLs (such as canonical). Defaults to `false`.
 - `httpsRedirect`
@@ -712,46 +523,6 @@ If you need to access the key on the client side, make sure `/js/config.js` is l
   The tracker ID for Facebook Pixel. When set, the Facebook Pixel code will be added to the page.
 - `WEBTOOLS_VERIF_ID`
   The ID for Webmaster Tools verification. When set, a file will be dynamically generated to assist with Webmaster Tools verifications. Simply set this field to enable the feature.
-
-Other configuration for optional modules:
-- email via Mailgun:
-  - `mailgunDomain`
-    The domain used in the mailgun configuration. If left unset, sending emails will simply return without sending and without errors.
-  - `mailgunApiKey`
-    The API key for accessing mailgun. If left unset, sending emails will simply return without sending and without errors.
-  - `mailgunDefaultFrom`
-    The default address to use in the From field when an email does not have a specific one defined.
-
-- noCaptcha:
-  - `nocaptchaSecret`
-    The secret, or API key, to use with nocaptcha validation. If not set, the captcha will be bypassed (always pass).
-  - `nocaptchaBypass`
-    True or false (boolean) to bypass the captcha. Useful for local environments without the need for captcha during testing.
-
-- Rackspace:
-  - `rackspaceContainer`
-     Required for any rackspace capability. This is the name of the container containing all the files.
-  - `rackspaceUsername`
-     Required for any rackspace capability. This is the username to log into Rackspace.
-  - `rackspaceApiKey`
-     Required for any rackspace capability. This is the API Key required to authenticate with Rackspace instead of using a password.
-  - `rackspaceMosso`
-     Required for the direct-to-rackspace uploads. Each account has a URL with a folder that starts with "Mosso"
-  - `rackspaceHmacKey`
-     Required for the direct-to-rackspace uploads. The HMAC key is set on Rackspace for securing direct file uploads.
-
-- Algolia
-  - `algoliaAppId`
-    The ID of the app in Algolia containing all the indecies.
-  - `algoliaApiKey`
-    The read+write API key used on the server side. This should not be exposed to the client side.
-  - `client:algoliaSearchKey`
-    The read only API key used on the client side. This is automatically exported to the client.
-    This is optional if all searches are done server side. For client side, use the algoliasearch package.
-  - `algoliaIndexPrefix`
-    All indecies should be named with the prefix, followed by underscore, followed by the name of the data model.
-    The prefix allows for multiple instances (dev, staging, prod, per-user etc) to share an app ID and not conflict.
-    Algolia does not have a naming standard, but this is what we have come up with and decided to follow.
 
 
 Heroku/Production (ENV variable) Only:

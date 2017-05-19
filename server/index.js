@@ -1,18 +1,19 @@
 'use strict';
 
-require('./errors/');
 const nconf = require('nconf');
+const path = require('path');
 
 const winston = require('winston');
 const csrf = require('csurf');
 const mongoose = require('mongoose');
 const passport = require('passport');
 const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
 const flash = require('connect-flash');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const expressWinston = require('express-winston');
+
+const HttpErrors = require('@bouncingpixel/http-errors');
 
 // now anything that may include a model may be used
 winston.debug('Loading express server');
@@ -20,14 +21,28 @@ winston.debug('Loading express server');
 const express = require('express');
 const app = express.Router();
 
-const isMongoEnabled = nconf.get('isMongoEnabled');
-const isAuthEnabled = nconf.get('isAuthEnabled');
+let databaseAdapter = null;
+let authAdapter = null;
+try {
+  databaseAdapter = require('@bouncingpixel/mongoose-db');
+} catch (_e) {
+  console.log(_e)
+  databaseAdapter = null;
+}
+if (databaseAdapter) {
+  try {
+    const authAdapterImpl = databaseAdapter.passportImplFactory(require('./models/user'));
+    authAdapter = require('@bouncingpixel/passport-auth')(authAdapterImpl);
+  } catch (_e) {
+    authAdapter = null;
+  }
+}
 
 const requireHttps = nconf.get('requireHTTPS') && nconf.get('requireHTTPS').toString() === 'true';
 const httpsRedirect = nconf.get('httpsRedirect') && nconf.get('httpsRedirect').toString() === 'true';
 
 const requireDomain = nconf.get('forceDomain') && nconf.get('forceDomain').toString() === 'true';
-const sitedomain = nconf.get('domain');
+const sitedomain = nconf.get('siterootHost');
 
 if (requireHttps || requireDomain) {
   app.use(function(req, res, next) {
@@ -61,19 +76,11 @@ if (nconf.get('WEBTOOLS_VERIF_ID')) {
 }
 
 winston.debug('Setting up session store');
-const sessionStore = isMongoEnabled ? new MongoStore({
-  mongooseConnection: mongoose.connection,
-  ttl: 14 * 24 * 3600,
-  touchAfter: 3600
-}) : (new session.MemoryStore());
+const sessionStore = databaseAdapter ?
+  databaseAdapter.getSessionStore(session) : (new session.MemoryStore());
 
-winston.debug('Configuring util functions');
-app.use(function(req, res, next) {
-  req.wantsJSON = req.xhr || (req.accepts('html', 'json') === 'json');
-  next();
-});
-
-app.use(require('./responses/'));
+winston.debug('Adding universal-response functions');
+app.use(require('@bouncingpixel/universal-response'));
 
 // middleware comes after statics, so we handle the statics without going thru middleware
 winston.silly('Configuring middlewares');
@@ -87,39 +94,10 @@ app.use(session({
 
 app.use(flash());
 
-if (isAuthEnabled) {
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  const PassportService = require('./services/passport-service');
-  passport.serializeUser(PassportService.serializeUser);
-  passport.deserializeUser(PassportService.deserializeUser);
-
-  passport.use(PassportService.localStrategy);
-
-  if (PassportService.passwordlessStrategy) {
-    passport.use('passwordless', PassportService.passwordlessStrategy);
-  }
-  if (PassportService.rememberMeStrategy) {
-    passport.use('remember-me', PassportService.rememberMeStrategy);
-  }
-  if (PassportService.facebookStrategy) {
-    passport.use(PassportService.facebookStrategy);
-  }
-  if (PassportService.googleStrategy) {
-    passport.use(PassportService.googleStrategy);
-  }
-  if (PassportService.twitterStrategy) {
-    passport.use(PassportService.twitterStrategy);
-  }
-  if (PassportService.linkedinStrategy) {
-    passport.use(PassportService.linkedinStrategy);
-  }
-
-  app.use(passport.authenticate('remember-me'));
+if (authAdapter) {
+  authAdapter.init(app);
 }
 
-// optional, but sometimes handy!
 app.use(function(req, res, next) {
   // expose some variables to dust automatically, so we don't have to in the routes
   if (req.user) {
@@ -209,18 +187,22 @@ for (let r in routes) {
 }
 
 // add ability to display static pages inside the views/pages/ directory
-app.use(require('./utils/auto-static-routes')());
+app.use(require('@bouncingpixel/auto-static-routes')(path.resolve(__dirname, '../views/'), 'static'));
 
 // set up our general 404 error handler
 app.use(function(req, res, next) {
   // if headers were sent, we assume something must have handled it and just ended with a next() call anyway
   if (!res.headersSent) {
     // pass it down to the general error handler
-    next(ServerErrors.NotFound('404 error occurred while attempting to load ' + req.url));
+    next(new HttpErrors.NotFoundError('404 error occurred while attempting to load ' + req.url));
   }
 });
 
 // the catch all and, general error handler. use next(err) to send it through this
-app.use(require('./utils/general-error-handler'));
+app.use(require('@bouncingpixel/error-router')({
+  enableFlash: true,
+  redirectOn401: '/',
+  sessionRedirectVar: 'redirectto'
+}));
 
 module.exports = app;
