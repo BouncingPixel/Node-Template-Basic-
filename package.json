@@ -23,21 +23,11 @@
     "node": "6.x"
   },
   "dependencies": {
-    "@bouncingpixel/auto-static-routes": "file:../bpix-packages/auto-static-routes",
-    "@bouncingpixel/dust-helpers": "file:../bpix-packages/dust-helpers",
-    "@bouncingpixel/error-router": "file:../bpix-packages/error-router",
-    "@bouncingpixel/http-errors": "file:../bpix-packages/http-errors",
-    "@bouncingpixel/universal-response": "file:../bpix-packages/universal-response",
-
-    "@bouncingpixel/algolia": "file:../bpix-packages/algolia",
-    "@bouncingpixel/datatable-routes": "file:../bpix-packages/datatable-routes",
-    "@bouncingpixel/mailgun-emails": "file:../bpix-packages/mailgun-emails",
-    "@bouncingpixel/mongoose-db": "file:../bpix-packages/mongoose-db",
-    "@bouncingpixel/nocaptcha-middleware": "file:../bpix-packages/nocaptcha-middleware",
-    "@bouncingpixel/passport-auth": "file:../bpix-packages/passport-auth",
-    "@bouncingpixel/pixel-validate": "file:../bpix-packages/pixel-validate",
-    "@bouncingpixel/rackspace-uploads": "file:../bpix-packages/rackspace-uploads",
-
+    "@bouncingpixel/auto-static-routes": "^0.4.0",
+    "@bouncingpixel/dust-helpers": "^0.1.0",
+    "@bouncingpixel/error-router": "^0.5.0",
+    "@bouncingpixel/http-errors": "^1.0.0",
+    "@bouncingpixel/universal-response": "^0.2.0",
     "async": "^2.1.4",
     "axios": "^0.15.3",
     "babel-core": "^6.22.1",
@@ -84,6 +74,13 @@
     "winston": "^2.3.0"
   },
   "optionalDependencies": {
+    "@bouncingpixel/datatable-routes": "^0.1.0",
+    "@bouncingpixel/mailgun-emails": "^0.2.0",
+    "@bouncingpixel/mongoose-db": "^0.4.0",
+    "@bouncingpixel/nocaptcha-middleware": "^0.4.0",
+    "@bouncingpixel/passport-auth": "^0.2.0",
+    "@bouncingpixel/pixel-validate": "^0.2.0",
+    "@bouncingpixel/rackspace-uploads": "^0.5.0",
     "passport-facebook": "^2.1.1",
     "passport-google-oauth": "^1.0.0",
     "passport-linkedin": "^1.0.0",
