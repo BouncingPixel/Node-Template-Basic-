@@ -30,6 +30,8 @@ nconf.argv()
     redirectOn401: '/login',
     sessionSecret: 'iamakeyboardcatbutnotreally',
 
+    webpackConfigPath: path.resolve(__dirname, 'webpack.config.js'),
+
     maxFailTries: 3, // after this many tries, start locks
     maxLockTime: 1 * 3600 * 1000, // maximum amount of a time an account may be locked for
 
@@ -44,6 +46,13 @@ try {
   databaseAdapter = require('@bouncingpixel/mongoose-db');
 } catch (_e) {
   databaseAdapter = null;
+}
+if (databaseAdapter) {
+  try {
+    const authAdapterImpl = databaseAdapter.passportImplFactory(require('./server/models/user'));
+    require('@bouncingpixel/passport-auth')(authAdapterImpl);
+  } catch (_e) {
+  }
 }
 
 const winston = require('winston');

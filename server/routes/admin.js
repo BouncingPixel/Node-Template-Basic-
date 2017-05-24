@@ -14,7 +14,6 @@ try {
 }
 
 if (!passportAuth) {
-  console.log('no passport auth?');
   module.exports = null;
   return;
 }
