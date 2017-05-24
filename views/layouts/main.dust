@@ -79,10 +79,9 @@
   </body>
 
   <script src="//cdn.polyfill.io/v2/polyfill.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.js"></script>
   <script src="/libs/imgix.min.js"></script>
 
-  <script src="/libs/mongoose.js"></script>
+  <script src="/js/config.js"></script>
   <script src="/js/main.js"></script>
 
 </html>

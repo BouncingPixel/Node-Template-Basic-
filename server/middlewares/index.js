@@ -1,3 +1,3 @@
 // Policies
 
-exports.RequireNocaptcha = require('./require-nocaptcha');
+// exports.MyMiddleware = require('./my-middleware');

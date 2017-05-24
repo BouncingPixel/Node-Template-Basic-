@@ -14,18 +14,7 @@ const nconf = require('nconf');
 nconf.argv()
   .env()
   .file({ file: 'config/config.json' })
-  .file({ file: 'config/local.json' })
-  .defaults({
-    port: 3000,
-    requireHTTPS: false,
-    logLevel: 'debug',
-    redirectOn401: '/login',
-
-    maxFailTries: 3, // after this many tries, start locks
-    maxLockTime: 1 * 3600 * 1000, // maximum amount of a time an account may be locked for
-
-    // Be sure to set other defaults here
-  });
+  .file({ file: 'config/local.json' });
 
 const bluebird = require('bluebird');
 const mongoose = require('mongoose');
@@ -57,11 +46,11 @@ Promise
       // async series map, ex http://promise-nuggets.github.io/articles/15-map-in-series.html
       let current = Promise.resolve();
 
-      Promise.all(Models.map(function(Model) {
+      return Promise.all(Models.map(function(Model) {
         // schedule the next only after the previous/current has finished
         current = current.then(function() {
           return Model.find({}).cursor().eachAsync((doc) => {
-            doc.saveToAlgolia();
+            return doc.saveToAlgolia();
           });
         });
         return current;
