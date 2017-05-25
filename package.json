@@ -23,12 +23,8 @@
     "node": "6.x"
   },
   "dependencies": {
-    "@bouncingpixel/auto-static-routes": "^0.4.0",
-    "@bouncingpixel/default-express": "^0.2.0",
-    "@bouncingpixel/dust-helpers": "^0.1.0",
-    "@bouncingpixel/error-router": "^0.5.0",
+    "@bouncingpixel/default-express": "^0.3.0",
     "@bouncingpixel/http-errors": "^1.0.0",
-    "@bouncingpixel/universal-response": "^0.2.0",
     "async": "^2.1.4",
     "axios": "^0.15.3",
     "babel-core": "^6.22.1",
@@ -67,11 +63,11 @@
   "optionalDependencies": {
     "@bouncingpixel/datatable-routes": "^0.1.0",
     "@bouncingpixel/mailgun-emails": "^0.2.0",
-    "@bouncingpixel/mongoose-db": "^0.4.0",
+    "@bouncingpixel/mongoose-db": "^0.4.1",
     "@bouncingpixel/nocaptcha-middleware": "^0.4.0",
-    "@bouncingpixel/passport-auth": "^0.2.0",
+    "@bouncingpixel/passport-auth": "^0.2.1",
     "@bouncingpixel/pixel-validate": "^0.2.0",
-    "@bouncingpixel/rackspace-uploads": "^0.5.0",
+    "@bouncingpixel/rackspace-uploads": "^0.7.4",
     "passport-facebook": "^2.1.1",
     "passport-google-oauth": "^1.0.0",
     "passport-linkedin": "^1.0.0",

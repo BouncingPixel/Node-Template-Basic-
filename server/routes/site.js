@@ -7,13 +7,10 @@ module.exports = router;
 const controllers = require('../controllers/');
 // const middlewares = require('../middlewares/');
 
-// some helpers
-const coWrapRoute = require('../utils/co-wrap-route');
-
 // define routes below
 /* Static route
 router.get('/', controllers.FooController.index); */
-router.get('/withco', coWrapRoute(controllers.FooController.withco));
+router.get('/withco', controllers.FooController.withco);
 
 const oldToNewRedirects = {
   '/about': '/about-mysite',

@@ -33,7 +33,7 @@
 - Algolia integration with Mongoose models
 - Emails with Mailgun
 - Datatables route handler generator
-- Route auto-generation for static pages
+- Route auto-generation for pages
   - Able to work with new files in dev mode
 - Response utilities integrated into `res`:
   - `ok`: helper to respond with JSON for ajax or rendered-view for non-ajax
@@ -104,9 +104,6 @@ module.exports = router;
 const controllers = require('../controllers/');
 const middlewares = require('../middlewares/');
 
-// some helpers
-const coWrapRoute = require('../utils/co-wrap-route');
-
 // add routes below
 ```
 
@@ -141,20 +138,11 @@ For example:
 router.get('/profile/:userid', middlewares.RequireLoggedIn, controllers.UserController.showProfile);
 ```
 
-Route handlers may utilize ES6 generators to make use of `yield`. ES6 is a great way to avoid direct use
-of Async and Promises making the code look synchronous. If the controller uses generators,
-then use the `server/utils/co-wrap-route.js` utility.
-The utility does not work for middleware.
+Route handlers may utilize ES6 generators or ES2017 async to make use of `yield` or `await`.
+ES6 is a great way to avoid direct use of Async and Promises making the code look synchronous.
+The Express `app` and Express.Router is already patched by `@bouncingpixel/default-express` to auto-wrap these.
 
-For example:
-
-```js
-router.get(
-  '/profile/:userid',
-  middlewares.RequireLoggedIn,
-  coWrapRoute(controllers.UserController.showProfileGen)
-);
-```
+See [express-async-patch](https://github.com/BouncingPixel/node-packages/tree/master/express-async-patch)
 
 #### Adding a controller
 
@@ -259,7 +247,10 @@ perform the necessary actions before or after.
 │ ├── services/
 │ ├── utils/
 │ ├─┬ views/
-│ │ └── static/
+│ │ ├── errors/
+│ │ ├── layouts/
+│ │ ├── pages/
+│ │ └── partials/
 │ └── index.js
 ├── working/
 ├── .gitignore
@@ -340,19 +331,6 @@ may utilize to perform functions.
 Utils is used for utilities shared between various controllers and/or other subsystems. This could include
 handy functions, data fetchers, external API handlers, and more.
 
-#### /server/utils/co-wrap-route.js
-
-A utility function for using ES6 generators as an Express handler. Automatically calls next with any errors.
-This utility allows the use of `yield` and `yield*` within `function*(req, req)` or `function*(err, req, req)`.
-
-`coWrapRoute(genFn, continueAfter)`
-
-- `genFn` is the generator function to be executed. If the generator takes 2 parameters, it is considered as
-  not an error handler. The two parameters are `req` and `res`. If the generator takes 3 (or more) parameters,
-  it is considered an error handler. The three parameters passed are `err`, `req`, and `res`. Following the
-  end of the function, `next()` will be called. If no handler causes anything to be sent, the 404 page will
-  be displayed to the end user.
-
 #### /server/utils/render-page.js
 
 A utility function to create an Express route handler for rendering a page with a static set of locals.
@@ -375,11 +353,12 @@ Each error page template has the following variables exposed:
 - `message`: The custom message set or the standard message if no custom message was set
 - `error`: The error object that was caught by the error handler
 
-### /server/views/static/
+### /server/views/pages/
 
-A special directory for static pages that can be served without creating express routes.
-The static pages are allowed to include layouts or partials. The only limitation is they do not access database.
+A special directory for pages that can be served without creating express routes.
+The pages are allowed to include layouts or partials. The only limitation is they do not directly access database.
 They may, however, access the current user, CSRF token, and other variables that are exposed to all routes.
+A middleware may access the database and expose information to res.locals, which can be accessed in these pages.
 
 ### /server/server.js
 
@@ -396,6 +375,7 @@ begin configuring and `npm install --save package` to save packages to package.j
 
 ## Default Packages
 
+* `@bouncingpixel/default-express`: The default express set up with middleware pre-configured
 * `@bouncingpixel/error-router`: Utility for handling errors and routing to pages
 * `@bouncingpixel/universal-response`: Utility for universal (XHR vs non-XHR) requests
 * `@bouncingpixel/auto-static-routes`: Utility for automatically creating routes for static pages
