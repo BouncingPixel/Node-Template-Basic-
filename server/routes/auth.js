@@ -6,9 +6,8 @@ const nconf = require('nconf');
 const express = require('express');
 const router = express.Router();
 
-// require all controllers and middleware in
-const controllers = require('../controllers/');
-// const middlewares = require('../middlewares/');
+// require any controllers and middleware in
+const AuthController = require('../controllers/auth-controller');
 
 let authAdapter = null;
 try {
@@ -25,7 +24,6 @@ if (!authAdapter) {
 module.exports = router;
 
 const authMiddlewares = authAdapter.middlewares;
-const AuthController = controllers.AuthController;
 
 // if rememberme is not desired, remove it from the chain
 // if you wanted always remember-me, then rig the form to always pass rememberme to be true/"true"

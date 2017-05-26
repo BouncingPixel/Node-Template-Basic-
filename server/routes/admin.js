@@ -3,8 +3,7 @@ const express = require('express');
 const router = express.Router();
 
 // require all controllers and middleware in
-// const controllers = require('../controllers/');
-// const middlewares = require('../middlewares/');
+// const AdminController = require('../controllers/admin-controller');
 
 let passportAuth = null;
 try {
@@ -19,10 +18,6 @@ if (!passportAuth) {
 }
 
 module.exports = router;
-
-// some helpers
-// const coWrapRoute = require('../utils/co-wrap-route');
-// const renderPage = require('../utils/render-page');
 
 // all admin routes are protected by requiring at least admin
 router.use(passportAuth.middlewares.requireUserRole('admin'));

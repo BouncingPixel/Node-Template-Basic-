@@ -28,32 +28,15 @@
 ### Features
 
 - MVC style
-- Mongoose for ORM functionality and schema enforcement
-- Rackspace uploads with imagemagick integration
-- Algolia integration with Mongoose models
-- Emails with Mailgun
-- Datatables route handler generator
-- Route auto-generation for pages
-  - Able to work with new files in dev mode
-- Response utilities integrated into `res`:
+- DustJS-Linkedin templating
+- Async-patched Express to enable middlewares to be ES6 Generators, via bluebird.coroutine, and ES2017 async
+- Route auto-generation for Dust pages
+  - In dev mode, does not require restarting to see changes.
+- Universal response utilities integrated into `res`:
   - `ok`: helper to respond with JSON for ajax or rendered-view for non-ajax
   - `okRedirect`: helper to respond with JSON for ajax or redirect to page for non-ajax
 - Error page detection for errors to allow unique pages for specific errors or general pages for the remainder
-- Pre-built User model with auto-bcrypt prior to save
-- User role levels to control levels of access
-- Passport for login in case other integrations are desirable (ex: Facebook, Google, LinkedIn, etc)
-- Remember-Me token capability
-- Forgot password token generation and login
-- Pre-built user middlewares for:
-  - Require logged in
-  - Require logged out
-  - Require user's role is at least some level
-  - File uploads
-- Single sign on capability pre-built for:
-  - Facebook
-  - Google
-  - Twitter
-  - LinkedIn
+- Pre-built User model for Mongoose with auto-bcrypt prior to save if mongoose-db is used.
 - Security:
   - Lock login attempts after a certain number of incorrect attempts
   - Login attempts are protected from timing attacks
@@ -67,6 +50,21 @@
   - Reset the password of a user to a specific password
   - Automatically configure Rackspace for direct-to-rackspace uploads
   - Clear and resync Algolia indecies if an out-of-sync occurs
+- Webpack for building client files
+  - Includes Babel for transpiling ES6
+  - Includes dust-loader for using dust files client side
+  - Includes `webpack-dev-middleware` for development auto-bundling
+- Supports additional extensions by installing packages. Features include:
+  - Database ORM
+  - Users with login including social media SSO
+    - Facebook
+    - Google
+    - Twitter
+    - LinkedIn
+  - Rackspace uploads with imagemagick integration
+  - Algolia integration with Mongoose models
+  - Emails with Mailgun
+  - Datatables route handler generator
 
 ### Style guide
 
@@ -100,15 +98,14 @@ const express = require('express');
 const router = express.Router();
 module.exports = router;
 
-// require all controllers and middleware in
-const controllers = require('../controllers/');
-const middlewares = require('../middlewares/');
+// require any controllers and middleware you wish to use
+const MyController = require('../controllers/my-controller');
+const SomeMiddleware = require('../middlewares/some-middleware');
 
 // add routes below
 ```
 
-3. Feel free to remove any requires not needed by your routes
-4. Add your subgroup to the `server/routes/index.js` file, example:
+3. Add your subgroup to the `server/routes/index.js` file, example:
 
 ```js
 exports['/admin'] = require('./admin');
@@ -135,7 +132,7 @@ To add a route:
 For example:
 
 ```js
-router.get('/profile/:userid', middlewares.RequireLoggedIn, controllers.UserController.showProfile);
+router.get('/profile/:userid', passportMiddlewares.requireLoggedIn, UserController.showProfile);
 ```
 
 Route handlers may utilize ES6 generators or ES2017 async to make use of `yield` or `await`.
@@ -150,7 +147,7 @@ Controllers are simply an exported object where the keys of the object are used 
 
 1. Add a file with the desired name, such as `user-controller.js`
 2. Export a single object containing all the handlers
-3. Add the controller to the `server/controllers/index.js`
+3. Require it like any other require in your routes files.
 
 ### Error Handling
 
@@ -284,6 +281,7 @@ See the section [Configuration](#configuration).
 ### /schemas/
 
 Contains any schemas for ORM models. They are placed here, so they may be used by client and server side.
+See below in the `/server/models/` section for more information.
 
 ### /server/controllers/
 
@@ -304,14 +302,15 @@ and makes it simpler to pull in one place instead of remembering to include in e
 
 ### /server/models/
 
-The template uses Mongoose for connecting to Mongo DB. Mongoose uses Models to define the schema and any utility functions.
+If you use an ORM, such as Mongoose provided via `@bouncingpixel/mongoose-db`, place the models in this directory.
+Mongoose is the suggested ORM. Others may be added in the future.
+Mongoose uses Models to define the schema and any utility functions.
 Mongoose also has hook capability to perform actions before other actions, such as bcrypting a password before saving.
-All models should be in this location. Models are not auto-loaded, so they must be required individually by any file
-which may use them.
+All models should be in this location. To use a model, just require it in.
 
 ### /server/routes/
 
-`index.js` exports various parts.
+`index.js` exports the various routers and the path to map the router to.
 The key of the export will be the sub-path that an imported router will attach to.
 The value should be an imported router from another file.
 Only one path may be '/' and others should use sub-paths for clarity.
@@ -437,7 +436,9 @@ to send console logs automatically to the external service.
 * `validator`: utility with standard validators for many common situations such as isEmail, isZip, and more
 * `webpack`: client-side build tool to enable CommonJS syntax, concat, and minification of source
 
-## Optional Utility Packages
+## Optional Packages
+
+Install any of these to add additional capability:
 
 * `@bouncingpixel/algolia`: Mongoose schema plugin and other utilities for Algolia
 * `@bouncingpixel/datatable-routes`: Route handler for Datatables
@@ -447,6 +448,13 @@ to send console logs automatically to the external service.
 * `@bouncingpixel/passport-auth`: User authentication with passport, relies on email as username
 * `@bouncingpixel/pixel-validate`: A tool for using Mongoose schemas to validate on server and in browser
 * `@bouncingpixel/rackspace-uploads`: Express middlewares to aid in uploading files to rackspace
+
+Additional enhancements for the `passport-auth` to add social media single sign on:
+* `passport-remember-me`: not a single sign on, but a remember me cookie implementation.
+* `passport-facebook`
+* `passport-google-oauth`
+* `passport-linkedin`
+* `passport-twitter`
 
 ## Configuration
 

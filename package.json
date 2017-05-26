@@ -7,7 +7,11 @@
   "scripts": {
     "start": "node app.js",
     "lint": "eslint server/** app.js express-server.js libs/** schemas/** dust-helpers.js && eslint -c .eslintrc-browser.js client/**",
-    "heroku-postbuild": "webpack --config webpack.config.js -p"
+    "heroku-postbuild": "webpack --config webpack.config.js -p",
+    "prepush": "npm run lint",
+    "postmerge": "node hooks/update-yarn.js",
+    "postcheckout": "node hooks/update-yarn.js",
+    "postrewrite": "node hooks/update-yarn.js"
   },
   "repository": {
     "type": "git",
@@ -60,17 +64,7 @@
     "webpack-dev-middleware": "^1.10.2",
     "winston": "^2.3.0"
   },
-  "optionalDependencies": {
-    "@bouncingpixel/datatable-routes": "^0.1.0",
-    "@bouncingpixel/mailgun-emails": "^0.2.0",
-    "@bouncingpixel/mongoose-db": "^0.4.1",
-    "@bouncingpixel/nocaptcha-middleware": "^0.4.0",
-    "@bouncingpixel/passport-auth": "^0.2.1",
-    "@bouncingpixel/pixel-validate": "^0.2.0",
-    "@bouncingpixel/rackspace-uploads": "^0.7.4",
-    "passport-facebook": "^2.1.1",
-    "passport-google-oauth": "^1.0.0",
-    "passport-linkedin": "^1.0.0",
-    "passport-twitter": "^1.0.4"
+  "devDependencies": {
+    "husky": "^0.13.3"
   }
 }
