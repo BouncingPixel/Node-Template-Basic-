@@ -2,7 +2,7 @@ const $ = require('jquery');
 const Slidebars = require('../libs/slidebars');
 
 // --Slidebars implementation --
-const slidebarsMenu = new slidebars();
+const slidebarsMenu = new Slidebars();
 slidebarsMenu.init();
 
 $('#mobile-menu-toggle').on('click', (e) => {

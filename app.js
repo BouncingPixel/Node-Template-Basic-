@@ -52,6 +52,7 @@ if (databaseAdapter) {
     const authAdapterImpl = databaseAdapter.passportImplFactory(require('./server/models/user'));
     require('@bouncingpixel/passport-auth')(authAdapterImpl);
   } catch (_e) {
+    // if there is an error, then it may be there is no passport-auth, so ignore.
   }
 }
 

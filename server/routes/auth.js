@@ -1,7 +1,5 @@
 'use strict';
 
-const nconf = require('nconf');
-
 // need the express package
 const express = require('express');
 const router = express.Router();
