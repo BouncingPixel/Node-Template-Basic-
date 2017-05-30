@@ -12,7 +12,7 @@ module.exports = {
     "sourceType": "module"
   },
   "globals": {
-    "paypal": true
+    "SiteConfig": true
   },
   "extends": "eslint:recommended",
   "rules": rules

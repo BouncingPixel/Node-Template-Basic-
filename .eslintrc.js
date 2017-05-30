@@ -4,9 +4,6 @@ module.exports = {
     "es6": true,
     "node": true
   },
-  "globals": {
-    "ServerErrors": true
-  },
   "extends": "eslint:recommended",
   "rules": require('./.eslintrules')
 };
