@@ -6,7 +6,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "lint": "eslint server/** app.js express-server.js libs/** schemas/** dust-helpers.js && eslint -c .eslintrc-browser.js client/**",
+    "lint": "eslint --ext .js server/** app.js express-server.js libs/** schemas/** dust-helpers.js && eslint -c .eslintrc-browser.js --ext .js client/**",
     "heroku-postbuild": "webpack --config webpack.config.js -p",
     "prepush": "npm run lint",
     "postmerge": "node hooks/update-yarn.js",
