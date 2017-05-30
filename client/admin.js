@@ -1,6 +1,5 @@
 const $ = require('jquery');
 require('trumbowyg');
-// require('materialize-css/dist/js/materialize.js');
 require('../public/libs/materialize.min');
 require('datatables');
 
@@ -9,10 +8,16 @@ axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 const dust = require('dustjs-linkedin/lib/dust');
 require('dustjs-helpers');
-const dustHelperLoader = require('../libs/dust-helpers');
-dustHelperLoader(dust);
 
-require('../libs/pixel-validate/browser.js');
+const stringHelpers = require('@bouncingpixel/dust-helpers/src/string-helpers');
+// '@bouncingpixel/dust-helpers/src/date-helpers'
+// '@bouncingpixel/dust-helpers/src/other-helpers'
+// '@bouncingpixel/dust-helpers/src/array-helpers'
+// '@bouncingpixel/dust-helpers/src/imgix-helpers'
+// '@bouncingpixel/dust-helpers/src/usstate-helpers'
+stringHelpers(dust);
+
+require('@bouncingpixel/pixel-validate/src/browser');
 
 $('.button-collapse').sideNav({'edge': 'left'});
 $('select').not('.disabled').material_select();

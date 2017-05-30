@@ -3,17 +3,13 @@ const express = require('express');
 const router = express.Router();
 module.exports = router;
 
-// require all controllers and middleware in
-const controllers = require('../controllers/');
-// const middlewares = require('../middlewares/');
-
-// some helpers
-const coWrapRoute = require('../utils/co-wrap-route');
+// require any controllers and middleware in
+const FooController = require('../controllers/foo-controller');
 
 // define routes below
 /* Static route
-router.get('/', controllers.FooController.index); */
-router.get('/withco', coWrapRoute(controllers.FooController.withco));
+router.get('/', FooController.index); */
+router.get('/withco', FooController.withco);
 
 const oldToNewRedirects = {
   '/about': '/about-mysite',
@@ -46,7 +42,8 @@ for (const oldUrl in oldToNewRedirects) {
 // original size "myfile.jpg"
 // 600x300 "myfile_wall.jpg"
 // 200x60 "myfile_tile.jpg"
-// router.post('/uploadImage', middlewares.uploadResizedImage([
+// const UploadResizedImage = require('@bouncingpixel/rackspace-uploads').middleware.uploadResizedImage;
+// router.post('/uploadImage', UploadResizedImage([
 //   {
 //     field: 'image',
 //     isRequired: true,
@@ -56,7 +53,8 @@ for (const oldUrl in oldToNewRedirects) {
 //       // look to use uuid's uuid.v4() or shortid's shortid.generate
 //       return path.parse(file.filename).name;
 //     },
-//     extention: 'jpg',
+//     mimetypes: ['image/jpeg', 'image/png'],
+//     allowConversions: ['image/bmp'],
 //     out: {
 //       // keep the original with default name as well by doing this:
 //       '': [],

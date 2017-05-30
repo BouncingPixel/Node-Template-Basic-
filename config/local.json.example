@@ -1,7 +1,7 @@
 {
   "logLevel": "debug",
   "mongoConnectStr": "mongodb://localhost:27017/local",
-  "domain": "localhost:3000",
+  "siterootHost": "localhost:3000",
   "PORT": "3000",
   "requireHTTPS": false,
   "forceDomain": false,

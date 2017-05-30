@@ -1,29 +1,35 @@
 'use strict';
 
-const nconf = require('nconf');
-const passport = require('passport');
-
 // need the express package
 const express = require('express');
 const router = express.Router();
+
+// require any controllers and middleware in
+const AuthController = require('../controllers/auth-controller');
+
+let authAdapter = null;
+try {
+  authAdapter = require('@bouncingpixel/passport-auth')();
+} catch (_e) {
+  authAdapter = null;
+}
+
+if (!authAdapter) {
+  module.exports = null;
+  return;
+}
+
 module.exports = router;
 
-// require all controllers and middleware in
-const controllers = require('../controllers/');
-const middlewares = require('../middlewares/');
-
-const PassportService = require('../services/passport-service');
-const AuthController = controllers.AuthController;
-
-const RequireLoggedOut = middlewares.RequireLoggedOut;
+const authMiddlewares = authAdapter.middlewares;
 
 // if rememberme is not desired, remove it from the chain
 // if you wanted always remember-me, then rig the form to always pass rememberme to be true/"true"
 router.post(
   '/login',
-  RequireLoggedOut,
-  PassportService.login,
-  PassportService.issueRememberMe,
+  authMiddlewares.requireLoggedOut,
+  authMiddlewares.login,
+  // authMiddlewares.issueRememberMe,
   AuthController.login,
   AuthController.failedLogin
 );
@@ -32,31 +38,31 @@ router.post(
 // forgotten token is a passwordless style, but may have some extras to let the user change their password
 router.post(
   '/token',
-  RequireLoggedOut,
-  PassportService.passwordlessLogin,
+  authMiddlewares.requireLoggedOut,
+  authMiddlewares.tokenLogin,
   AuthController.token,
   AuthController.failedToken
 );
 
-router.get('/logout', PassportService.logout, AuthController.logout);
-router.post('/logout', PassportService.logout, AuthController.logout);
+router.get('/logout', authMiddlewares.logout, AuthController.logout);
+router.post('/logout', authMiddlewares.logout, AuthController.logout);
 
-if (nconf.get('sso:facebook:appid') && nconf.get('sso:facebook:secret')) {
-  router.get('/facebook', passport.authenticate('facebook', {scope: ['email', 'public_profile']}));
-  router.get('/facebook/callback', passport.authenticate('facebook'), AuthController.oathPostRedirect);
+if (authMiddlewares.facebookStart) {
+  router.get('/facebook', authMiddlewares.facebookStart);
+  router.get('/facebook/callback', authMiddlewares.facebookCallback, AuthController.oathPostRedirect);
 }
 
-if (nconf.get('sso:google:clientid') && nconf.get('sso:google:secret')) {
-  router.get('/google', passport.authenticate('google', {scope: ['email', 'profile']}));
-  router.get('/google/callback', passport.authenticate('google'), AuthController.oathPostRedirect);
+if (authMiddlewares.googleStart) {
+  router.get('/google', authMiddlewares.googleStart);
+  router.get('/google/callback', authMiddlewares.googleCallback, AuthController.oathPostRedirect);
 }
 
-if (nconf.get('sso:twitter:key') && nconf.get('sso:twitter:secret')) {
-  router.get('/twitter', passport.authenticate('twitter', {scope: ['email']}));
-  router.get('/twitter/callback', passport.authenticate('twitter'), AuthController.oathPostRedirect);
+if (authMiddlewares.twitterStart) {
+  router.get('/twitter', authMiddlewares.twitterStart);
+  router.get('/twitter/callback', authMiddlewares.twitterCallback, AuthController.oathPostRedirect);
 }
 
-if (nconf.get('sso:linkedin:key') && nconf.get('sso:linkedin:secret')) {
-  router.get('/linkedin', passport.authenticate('linkedin', {scope: ['r_basicprofile', 'r_emailaddress']}));
-  router.get('/linkedin/callback', passport.authenticate('linkedin'), AuthController.oathPostRedirect);
+if (authMiddlewares.linkedinStart) {
+  router.get('/linkedin', authMiddlewares.linkedinStart);
+  router.get('/linkedin/callback', authMiddlewares.linkedinCallback, AuthController.oathPostRedirect);
 }
