@@ -27,7 +27,10 @@ module.exports = mongoose.Schema({
 
   role: {
     type: String,
-    enum: [UserRoles, 'Only valid roles may be assigned to a user'],
+    enum: {
+      values: UserRoles,
+      message: 'Only valid roles may be assigned to a user'
+    },
     default: defaultUserRole,
   },
 

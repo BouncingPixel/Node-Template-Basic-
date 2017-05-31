@@ -134,9 +134,14 @@ Promise
           return questions;
         }
 
-        if (Array.isArray(schemaProp.enum)) {
+        if (schemaProp.enum) {
           keyProps.type = 'list';
-          keyProps.choices = schemaProp.enum;
+
+          if (schemaProp.enum.values) {
+            keyProps.choices = schemaProp.enum.values;
+          } else {
+            keyProps.choices = schemaProp.enum;
+          }
         } else if (key === 'password') {
           keyProps.type = 'password';
         }
