@@ -1,12 +1,5 @@
 'use strict';
 
-// need the express package
-const express = require('express');
-const router = express.Router();
-
-// require any controllers and middleware in
-const AuthController = require('../controllers/auth-controller');
-
 let authAdapter = null;
 try {
   authAdapter = require('@bouncingpixel/passport-auth')();
@@ -15,54 +8,115 @@ try {
 }
 
 if (!authAdapter) {
-  module.exports = null;
+  module.exports = {};
   return;
 }
 
-module.exports = router;
-
+// require any controllers and middleware in
+const AuthController = require('../controllers/auth-controller');
 const authMiddlewares = authAdapter.middlewares;
 
-// if rememberme is not desired, remove it from the chain
-// if you wanted always remember-me, then rig the form to always pass rememberme to be true/"true"
-router.post(
-  '/login',
-  authMiddlewares.requireLoggedOut,
-  authMiddlewares.login,
-  // authMiddlewares.issueRememberMe,
-  AuthController.login,
-  AuthController.failedLogin
-);
+const routes = {
+  '/login': {
+    post: {
+      before: [
+        authMiddlewares.requireLoggedOut,
+        authMiddlewares.login,
 
-// this could be a passwordless login or a forgotten token
-// forgotten token is a passwordless style, but may have some extras to let the user change their password
-router.post(
-  '/token',
-  authMiddlewares.requireLoggedOut,
-  authMiddlewares.tokenLogin,
-  AuthController.token,
-  AuthController.failedToken
-);
+        // if rememberme is desired, uncomment it
+        authMiddlewares.issueRememberMe
+      ],
 
-router.get('/logout', authMiddlewares.logout, AuthController.logout);
-router.post('/logout', authMiddlewares.logout, AuthController.logout);
+      handler: AuthController.login,
+
+      after: [AuthController.failedLogin]
+    }
+  },
+
+  '/token': {
+    post: {
+      before: [
+        authMiddlewares.requireLoggedOut,
+        authMiddlewares.tokenLogin
+      ],
+
+      handler: AuthController.token,
+
+      after: [AuthController.failedToken]
+    }
+  },
+
+  '/logout': {
+    get: {
+      before: [authMiddlewares.logout],
+      handler: AuthController.logout
+    },
+
+    post: {
+      before: [authMiddlewares.logout],
+      handler: AuthController.logout
+    }
+  }
+};
 
 if (authMiddlewares.facebookStart) {
-  router.get('/facebook', authMiddlewares.facebookStart);
-  router.get('/facebook/callback', authMiddlewares.facebookCallback, AuthController.oathPostRedirect);
+  routes['/facebook'] = {
+    get: {
+      handler: authMiddlewares.facebookStart
+    },
+
+    '/callback': {
+      get: {
+        before: [authMiddlewares.facebookCallback],
+        handler: AuthController.oathPostRedirect
+      }
+    }
+  };
 }
 
 if (authMiddlewares.googleStart) {
-  router.get('/google', authMiddlewares.googleStart);
-  router.get('/google/callback', authMiddlewares.googleCallback, AuthController.oathPostRedirect);
+  routes['/google'] = {
+    get: {
+      handler: authMiddlewares.googleStart
+    },
+
+    '/callback': {
+      get: {
+        before: [authMiddlewares.googleCallback],
+        handler: AuthController.oathPostRedirect
+      }
+    }
+  };
 }
 
 if (authMiddlewares.twitterStart) {
-  router.get('/twitter', authMiddlewares.twitterStart);
-  router.get('/twitter/callback', authMiddlewares.twitterCallback, AuthController.oathPostRedirect);
+  routes['/twitter'] = {
+    get: {
+      handler: authMiddlewares.twitterStart
+    },
+
+    '/callback': {
+      get: {
+        before: [authMiddlewares.twitterCallback],
+        handler: AuthController.oathPostRedirect
+      }
+    }
+  };
 }
 
 if (authMiddlewares.linkedinStart) {
-  router.get('/linkedin', authMiddlewares.linkedinStart);
-  router.get('/linkedin/callback', authMiddlewares.linkedinCallback, AuthController.oathPostRedirect);
+  routes['/linkedin'] = {
+    get: {
+      handler: authMiddlewares.linkedinStart
+    },
+
+    '/callback': {
+      get: {
+        before: [authMiddlewares.linkedinCallback],
+        handler: AuthController.oathPostRedirect
+      }
+    }
+  };
 }
+
+module.exports = routes;

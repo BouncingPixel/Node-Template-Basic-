@@ -43,16 +43,20 @@ dev_conf.js
 .config
 .npm
 .node-gyp
+.vscode
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
 
 # Composer Vendors #
 ####################
 vendor
 
-# OpenShift Project file #
-##########################
-.ocproject
-
 # Config and Built files #
 ##########################
 config/local.json
+config/local.js
 public/js/**
+coverage/
