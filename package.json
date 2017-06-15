@@ -8,10 +8,7 @@
     "start": "node app.js",
     "lint": "eslint server/**/*.js app.js express-server.js libs/**/*.js schemas/**/*.js dust-helpers.js && eslint -c .eslintrc-browser.js client/**/*.js",
     "heroku-postbuild": "webpack --config webpack.config.js -p",
-    "prepush": "npm run lint",
-    "postmerge": "node hooks/update-yarn.js",
-    "postcheckout": "node hooks/update-yarn.js",
-    "postrewrite": "node hooks/update-yarn.js"
+    "prepush": "npm run lint"
   },
   "repository": {
     "type": "git",
@@ -27,7 +24,7 @@
     "node": "6.x"
   },
   "dependencies": {
-    "@bouncingpixel/default-express": "^0.3.0",
+    "@bouncingpixel/default-express": "^0.7.0",
     "@bouncingpixel/http-errors": "^1.0.0",
     "async": "^2.1.4",
     "axios": "^0.15.3",

@@ -1,8 +1,8 @@
 'use strict';
 
-const postLoginUrl = '/';
-const postLogoutUrl = '/';
-const postErrorUrl = '/login';
+const postLoginUrl = '/admin/';
+const postLogoutUrl = '/login/';
+const postErrorUrl = '/login/';
 
 module.exports = {
   login: function(req, res) {
@@ -12,9 +12,9 @@ module.exports = {
 
   failedLogin: function(err, req, res, _next) {
     if (!req.wantsJSON) {
-      req.flash(err.message);
+      req.flash('error', 'Login failed: ' + err.message || err);
+      res.okRedirect(postErrorUrl, {status: false, error: err});
     }
-    res.okRedirect(postErrorUrl, {status: false, error: err});
   },
 
   token: function(req, res) {
@@ -23,7 +23,7 @@ module.exports = {
 
   failedToken: function(err, req, res, _next) {
     if (!req.wantsJSON) {
-      req.flash(err.message);
+      req.flash(err.message || err);
     }
     res.okRedirect(postErrorUrl, {status: false, error: err});
   },

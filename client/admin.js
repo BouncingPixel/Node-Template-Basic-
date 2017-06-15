@@ -17,7 +17,8 @@ const stringHelpers = require('@bouncingpixel/dust-helpers/src/string-helpers');
 // '@bouncingpixel/dust-helpers/src/usstate-helpers'
 stringHelpers(dust);
 
-require('@bouncingpixel/pixel-validate/src/browser');
+// uncomment if you want pixel-validate
+// require('@bouncingpixel/pixel-validate/src/browser');
 
 $('.button-collapse').sideNav({'edge': 'left'});
 $('select').not('.disabled').material_select();
