@@ -2,7 +2,7 @@
 
 let authAdapter = null;
 try {
-  authAdapter = require('@bouncingpixel/passport-auth')();
+  authAdapter = require('@bouncingpixel/passport-auth');
 } catch (_e) {
   authAdapter = null;
 }
