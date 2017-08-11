@@ -2,15 +2,15 @@
 <html>
   <head>
     <meta charset="UTF-8">
+
     <title>{+doc_title}Default Title{/doc_title}</title>
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="keywords" content="{+doc_keywords}Hog hunting, night, equipment, gear, Game Alert, merchandise{/doc_keywords}">
-    <meta name="description" content="{+doc_description}HOGMAN-OUTDOORS develops products designed to give an advantage when hunting at night. Hunting and feeder lights, tactical flashlights, accessories.{/doc_description}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="keywords" content="{+doc_keywords}{/doc_keywords}">
+    <meta name="description" content="{+doc_description}{/doc_description}">
 
-    <meta property="og:description" content="{+doc_description}HOGMAN-OUTDOORS develops products designed to give an advantage when hunting at night. Hunting and feeder lights, tactical flashlights, accessories.{/doc_description}" />
-    <meta property="twitter:description" content="{+doc_description}HOGMAN-OUTDOORS develops products designed to give an advantage when hunting at night. Hunting and feeder lights, tactical flashlights, accessories.{/doc_description}" />
+    <meta property="og:description" content="{+doc_description}{/doc_description}" />
+    <meta property="twitter:description" content="{+doc_description}{/doc_description}" />
 
     <link rel="canonical" href="{pagecanonURL}" />
     <meta property="og:locale" content="en_US" />
@@ -18,18 +18,18 @@
       <meta property="og:type" content="website" />
       <meta name="twitter:card" content="summary">
 
-      <meta property="og:title" content="Hog Lights and Equipment for Night Hunting | HOGMAN" />
-      <meta name="twitter:title" content="Hog Lights and Equipment for Night Hunting | HOGMAN">
+      <meta property="og:title" content="" />
+      <meta name="twitter:title" content="">
 
       {! TODO: get default image
       <meta name="twitter:image:src" content="">
       <meta property="og:image" content="" />
       !}
     {/doc_meta}
-    <meta name="twitter:site" content="@hogmanoutdoors">
-    <meta name="twitter:creator" content="@hogmanoutdoors">
+    <meta name="twitter:site" content="@BouncingPixel">
+    <meta name="twitter:creator" content="@BouncingPixel">
     <meta property="og:url" content="{pagecanonURL}" />
-    <meta property="og:site_name" content="Hogman Outdoors" />
+    <meta property="og:site_name" content="" />
 
     <meta property="ix:host" content="{ENV.imgixUrl}">
     <meta property="ix:useHttps" content="true">
@@ -82,6 +82,7 @@
   <script src="/libs/imgix.min.js"></script>
 
   <script src="/js/config.js"></script>
-  <script src="/js/main.js"></script>
+  <script src="/js/browser/commons.js"></script>
+  <script src="/js/browser/index.js"></script>
 
 </html>

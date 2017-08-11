@@ -30,6 +30,10 @@ const DefaultExpress = require('@bouncingpixel/default-express');
 // nconf.set('provider:passportAuthImpl', passportAuthImpl);
 // nconf.set('provider:authAdapter', require('@bouncingpixel/passport-auth'));
 
-DefaultExpress.init().catch(function(err) {
+DefaultExpress.init().then(function() {
+  // add our own dust-helpers
+  const cons = require('consolidate');
+  require('./libs/dust-helpers')(cons.requires.dust);
+}).catch(function(err) {
   winston.error(err);
 });

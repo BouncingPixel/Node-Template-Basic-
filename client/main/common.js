@@ -1,5 +1,5 @@
 const $ = require('jquery'); // eslint-disable-line no-unused-vars
-require('./main/slidebars');
+require('./mobile-menu');
 
 const axios = require('axios');
 axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
@@ -14,3 +14,4 @@ const stringHelpers = require('@bouncingpixel/dust-helpers/src/string-helpers');
 // '@bouncingpixel/dust-helpers/src/imgix-helpers'
 // '@bouncingpixel/dust-helpers/src/usstate-helpers'
 stringHelpers(dust);
+require('../../libs/dust-helpers')(dust);
