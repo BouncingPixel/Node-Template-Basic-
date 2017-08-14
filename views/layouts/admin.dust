@@ -13,7 +13,7 @@
     <link type="text/css" rel="stylesheet" href="//cdn.jsdelivr.net/sweetalert2/4.0.6/sweetalert2.css" />
     <link type="text/css" rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/Trumbowyg/2.4.2/ui/trumbowyg.css" />
     <link type="text/css" rel="stylesheet" href="//cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css" />
-    <link type="text/css" rel="stylesheet" href="/css/admin.css" />
+    <link type="text/css" rel="stylesheet" href="/admin/styles/styles.css?{@getFileHash file="styles/styles.css"/}" />
 
     <!--Let browser know website is optimized for mobile-->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -143,8 +143,11 @@
   <script src="/libs/imgix.min.js"></script>
 
   <script src="/js/config.js"></script>
-  <script src="/js/admin/commons.js"></script>
-  <script src="/js/admin/index.js"></script>
+  <script src="/admin/js/commons.js?{@getFileHash file="js/commons.js"/}"></script>
+
+  {+pageJs}
+  <script src="/admin/js/index.js?{@getFileHash file="js/index.js"/}"></script>
+  {/pageJs}
 
   </body>
 </html>

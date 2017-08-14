@@ -58,5 +58,6 @@ vendor
 ##########################
 config/local.json
 config/local.js
-public/js/**
+public/admin/**
+public/main/**
 coverage/

@@ -15,5 +15,10 @@ module.exports = {
   // Be sure to set other defaults here
   client: {
     imgixUrl: 'MYSITE.imgix.net/'
-  }
+  },
+
+  hashJsonFiles: [
+    path.resolve(__dirname, '../public/main/main-stats.json'),
+    path.resolve(__dirname, '../public/admin/admin-stats.json')
+  ]
 };

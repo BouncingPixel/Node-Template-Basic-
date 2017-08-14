@@ -36,9 +36,7 @@
 
     <link href='//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,300,400,500,600,700|Roboto:300italic,400italic,300,400,500,700,900' rel='stylesheet' type='text/css'>
     <link type="text/css" rel="stylesheet" href="//cdn.jsdelivr.net/sweetalert2/4.0.6/sweetalert2.css" />
-    <link rel="stylesheet" href="/css/slidebars.css" type="text/css">
-    <link rel="stylesheet" href="/css/reset.css" type="text/css">
-    <link rel="stylesheet" href="/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/main/styles/styles.css?{@getFileHash file="styles/styles.css"/}" type="text/css">
 
     {?gatrackerid}
       <script>
@@ -82,7 +80,9 @@
   <script src="/libs/imgix.min.js"></script>
 
   <script src="/js/config.js"></script>
-  <script src="/js/browser/commons.js"></script>
-  <script src="/js/browser/index.js"></script>
+  <script src="/main/js/commons.js?{@getFileHash file="js/commons.js"/}"></script>
 
+  {+pageJs}
+  <script src="/main/js/index.js?{@getFileHash file="js/index.js"/}"></script>
+  {/pageJs}
 </html>
