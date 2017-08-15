@@ -173,11 +173,12 @@ function makeLoaders(extractCss) {
 function makeStatWriter(name) {
   return new StatsWriterPlugin({
     filename: name,
-    fields: ['chunks'],
+    fields: ['chunks', 'publicPath'],
     transform: function(data) {
       const fileHashes = data.chunks.reduce(function(hashes, chunk) {
         chunk.files.forEach(function(file) {
-          hashes[file] = chunk.hash.substr(0, 8);
+          const key = data.publicPath + file.replace(/\\/g, '/');
+          hashes[key] = chunk.hash.substr(0, 8);
         });
 
         return hashes;

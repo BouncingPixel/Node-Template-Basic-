@@ -9,9 +9,9 @@
     nconf "^0.8.4"
     winston "^2.3.0"
 
-"@bouncingpixel/default-express@^0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@bouncingpixel/default-express/-/default-express-0.11.0.tgz#7101ebb20f8a72e332e29c6fbe5081b42f8c5e03"
+"@bouncingpixel/default-express@^0.12.0":
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/@bouncingpixel/default-express/-/default-express-0.12.0.tgz#a001997036090329c134bcfbc0a939020e1d54a7"
   dependencies:
     "@bouncingpixel/config-loader" "^0.1.1"
     "@bouncingpixel/dust-helpers" "^0.3.0"
