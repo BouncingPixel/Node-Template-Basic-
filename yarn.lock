@@ -9,9 +9,9 @@
     nconf "^0.8.4"
     winston "^2.3.0"
 
-"@bouncingpixel/default-express@^0.12.0":
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/@bouncingpixel/default-express/-/default-express-0.12.0.tgz#a001997036090329c134bcfbc0a939020e1d54a7"
+"@bouncingpixel/default-express@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@bouncingpixel/default-express/-/default-express-0.13.0.tgz#34464179b727f2ee8c052a9b0110a8b2e0c6c3fd"
   dependencies:
     "@bouncingpixel/config-loader" "^0.1.1"
     "@bouncingpixel/dust-helpers" "^0.3.0"
@@ -20,6 +20,7 @@
     "@bouncingpixel/express-view-routing" "^0.1.5"
     "@bouncingpixel/http-errors" "^1.0.0"
     "@bouncingpixel/universal-response" "^0.2.0"
+    ansi-to-html "~0.6.3"
     body-parser "^1.15.1"
     compression "^1.6.2"
     connect-flash "^0.1.1"
@@ -172,6 +173,12 @@ ansi-styles@^3.1.0:
 ansi-styles@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-1.0.0.tgz#cb102df1c56f5123eab8b67cd7b98027a0279178"
+
+ansi-to-html@~0.6.3:
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/ansi-to-html/-/ansi-to-html-0.6.3.tgz#167ebfa5a125dc96bb39ba3ae0660fd5f43d2cb0"
+  dependencies:
+    entities "^1.1.1"
 
 anymatch@^1.3.0:
   version "1.3.0"
@@ -1623,6 +1630,10 @@ enhanced-resolve@^3.4.0:
     memory-fs "^0.4.0"
     object-assign "^4.0.1"
     tapable "^0.2.7"
+
+entities@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/entities/-/entities-1.1.1.tgz#6e5c2d0a5621b5dadaecef80b90edfb5cd7772f0"
 
 errno@^0.1.3:
   version "0.1.4"

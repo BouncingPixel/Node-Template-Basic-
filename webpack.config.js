@@ -157,14 +157,29 @@ function makeLoaders(extractCss) {
       test: /\.css$/,
       use: extractCss.extract({
         fallback: 'style-loader',
-        use: 'css-loader'
+        use: {
+          loader: 'css-loader',
+          options: {
+            sourceMaps: true
+          }
+        }
       })
     },
     {
       test: /\.scss$/,
       use: extractCss.extract({
         fallback: 'style-loader',
-        use: ['css-loader', 'sass-loader']
+        use: [{
+          loader: 'css-loader',
+          options: {
+            sourceMaps: true
+          }
+        }, {
+          loader: 'sass-loader',
+          options: {
+            sourceMaps: true
+          }
+        }]
       })
     }
   ];
