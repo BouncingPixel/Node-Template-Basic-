@@ -11,7 +11,7 @@
 - [Directory Structure](#directory-structure)
 - [Default Packages](#default-packages)
 - [Other packages for tasks](#other-packages-for-tasks)
-- [Optional Utility Packages](#optional-utility-packages)
+- [Optional Utility Packages](#optional-packages)
 - [Configuration](#configuration)
 - [Other notes](#other-notes)
 
